@@ -33,6 +33,7 @@ const sidebars: SidebarsConfig = {
           ],
         },
         'reference/voice-rules',
+        'reference/graphic-style',
         'reference/glossary',
       ],
     },
