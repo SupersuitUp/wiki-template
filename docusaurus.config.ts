@@ -33,6 +33,7 @@ const config: Config = {
 
   plugins: [
     './plugins/search-plugin',
+    './plugins/creation-date-plugin',
   ],
 
   presets: [

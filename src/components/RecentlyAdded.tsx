@@ -16,10 +16,13 @@ interface CreationDatePluginContent {
   recentFiles: RecentFile[];
 }
 
+// Section folder slug → display label. Tune this map to match the
+// top-level folders under `docs/`. Operators forking this template
+// should update this when they add or rename top-level sections.
 const SECTION_LABELS: Record<string, string> = {
+  'start-here': 'Start Here',
   concepts: 'Concept',
-  guides: 'Guide',
-  'case-studies': 'Case Study',
+  reference: 'Reference',
 };
 
 function sectionLabel(section: string): string {

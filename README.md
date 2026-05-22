@@ -4,6 +4,16 @@
 
 ---
 
+## Start here: the playbook
+
+The full end-to-end recipe for using this template — the audience-posture interview, integration layering, branding, and Vercel deploy — lives at:
+
+**[truthmanagement.wiki/playbooks/starting-your-own-wiki](https://www.truthmanagement.wiki/playbooks/starting-your-own-wiki)**
+
+If you are scaffolding a fresh wiki, run the GENERATE recipe at the bottom of that page ([the-generate-recipe anchor](https://www.truthmanagement.wiki/playbooks/starting-your-own-wiki#the-generate-recipe)) and follow its four phases. This README is the quick reference once you know the shape.
+
+---
+
 ## What this is
 
 A GitHub template repo for spinning up a new Docusaurus reference wiki with the conventions already baked in:
@@ -11,6 +21,7 @@ A GitHub template repo for spinning up a new Docusaurus reference wiki with the 
 - **Page anatomy enforced.** Frontmatter, H1 + italic one-line definition, divider, named H2 sections, Further Reading. The sample docs in `docs/` demonstrate the shape.
 - **Per-wiki branding via `wiki.config.json`.** Title, tagline, URL, GitHub org/repo, noindex toggle. The Docusaurus config and prebuild scripts read from this single source of truth.
 - **Search built in.** Custom MiniSearch plugin (Cmd+K / `/` trigger, in-memory index, no third-party service).
+- **Changelog built in.** Git-derived creation/update dates surface as a `<RecentlyAdded />` widget on the homepage and a full `/changelog` page. No frontmatter dates required.
 - **Bot-blocked at the edge.** `middleware.ts` returns 403 for known LLM training and AI-search user agents.
 - **Noindex by default.** `robots.txt: Disallow: /` + `<meta name="robots" content="noindex, nofollow">`. Toggle via `wiki.config.json`.
 - **`llms.txt` + `llms-full.txt` at build time.** Auto-generated from your docs so well-behaved AI agents can read the wiki without crawling it.
@@ -78,8 +89,11 @@ templates/                 Copy-and-rename MDX scaffolds
 src/
   css/custom.css           Brand colors + typography
   components/ShareButton   Reusable copy-link button
+  components/RecentlyAdded Homepage widget: top-N most-recent doc updates
+  components/Changelog     Full month-grouped log for /changelog
   theme/                   Docusaurus swizzles
 plugins/search-plugin/     Custom MiniSearch
+plugins/creation-date-plugin/  Walks docs/ and extracts git first/last commit dates per file
 scripts/
   init-wiki.sh             `npm run init` — interactive setup
   generate-llms-txt.sh     Generates llms.txt at build
@@ -107,6 +121,19 @@ Then edit the new file. The frontmatter and page anatomy are already in place.
 - **Absolute paths for cross-links.** `/concepts/term-name`, not relative paths.
 - **`onBrokenLinks: 'throw'`.** A broken cross-link fails the build.
 - **Homepage is the Start Here landing.** The file at `docs/start-here/index.mdx` carries `slug: /` and is both the wiki's homepage AND the Start Here category landing in the sidebar. Do NOT create a separate `docs/index.mdx` for the homepage. A standalone root index lives outside every sidebar group, so the homepage renders without a sidebar. Keep the canonical pattern: one file, two roles.
+
+## Changelog (built in)
+
+Every wiki forked from this template ships with the `wiki-changelog` feature pre-wired:
+
+- **`/changelog`** is a full month-grouped log of every doc in the wiki, newest first. Lives at `docs/changelog.mdx` and pulls data from the `creation-date-plugin`.
+- **`<RecentlyAdded limit={8} />`** is embedded near the bottom of the homepage (`docs/start-here/index.mdx`). It surfaces the most recently created or updated docs as a compact list.
+- Dates are derived from git history (first commit per file = creation, last commit = update; renames followed). No frontmatter `creation_date` field required.
+- `vercel.json` includes `git fetch --unshallow` in the build command so deployed dates reflect actual file creation, not the deploy commit.
+
+**Fork-time tuning.** Both `src/components/RecentlyAdded.tsx` and `src/components/Changelog.tsx` carry a `SECTION_LABELS` map at the top of the file. The template ships with labels for the default sections (`start-here`, `concepts`, `reference`). If you add or rename top-level folders under `docs/`, update both `SECTION_LABELS` maps to match — otherwise the changelog will fall back to a title-cased version of the folder slug.
+
+For the recipe in full, see `curated-wiki-integrations/integrations/wiki-changelog/INTEGRATE.md` in the parent `supersuit-repos/` workspace.
 
 ## License
 
