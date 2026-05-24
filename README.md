@@ -50,6 +50,8 @@ npm run init
 
 `npm run init` prompts for title, tagline, URL, GitHub org/repo, description, and noindex preference, then writes `wiki.config.json` and updates `package.json`.
 
+At the end of init, you'll be offered the **field-note-sharers** integration (default ON). Pick a section folder name (`mentors`, `people-to-follow`, `sources`, `field-note-sharers`, or custom) and the script scaffolds `docs/<section>/index.md` and prints a sidebar snippet for you to paste. To enable it later instead, run `npm run init:field-note-sharers` standalone. The canonical recipe lives at `supersuit-repos/curated-wiki-integrations/integrations/field-note-sharers/`; the templates inside `scripts/templates/field-note-sharers/` are an intentional copy so the template is self-contained at bootstrap time.
+
 ### 3. Customize
 
 - **Brand colors:** edit `src/css/custom.css` (the `--ifm-color-primary-*` group).
@@ -95,9 +97,12 @@ src/
 plugins/search-plugin/     Custom MiniSearch
 plugins/creation-date-plugin/  Walks docs/ and extracts git first/last commit dates per file
 scripts/
-  init-wiki.sh             `npm run init` — interactive setup
-  generate-llms-txt.sh     Generates llms.txt at build
-  llms-txt-env.mjs         Bridges wiki.config.json -> env vars
+  init-wiki.sh                    `npm run init` — interactive setup
+  init-field-note-sharers.sh      `npm run init:field-note-sharers` — scaffold the attribution section
+  generate-llms-txt.sh            Generates llms.txt at build
+  llms-txt-env.mjs                Bridges wiki.config.json -> env vars
+  templates/
+    field-note-sharers/           Section-index + source-page templates (mirror of curated-wiki-integrations recipe)
 middleware.ts              Edge bot-block
 static/
   img/                     Favicon, social card

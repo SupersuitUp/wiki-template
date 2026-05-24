@@ -58,9 +58,20 @@ echo ""
 echo "Wrote $CONFIG"
 echo "Updated $PKG (name -> $PROJECT)"
 echo ""
-echo "Next steps:"
+
+# Optional integrations
+echo "=== Optional integrations ==="
+echo ""
+read -r -p "Enable the field-note-sharers attribution section (mentors / people-to-follow / etc.)? [Y/n]: " ENABLE_FNS
+if [[ -z "$ENABLE_FNS" || "$ENABLE_FNS" =~ ^[Yy]$ ]]; then
+  bash "$ROOT/scripts/init-field-note-sharers.sh"
+fi
+
+echo ""
+echo "=== Next steps ==="
 echo "  1. Edit src/css/custom.css to set brand colors (the --ifm-color-primary-* group)."
 echo "  2. Replace static/img/favicon.png and static/img/docusaurus-social-card.jpg."
 echo "  3. Replace docs/start-here/index.md with the canonical entry point for this wiki."
-echo "  4. Run 'npm install' then 'npm start' to preview."
+echo "  4. If you enabled field-note-sharers, paste the sidebar snippet printed above into sidebars.ts."
+echo "  5. Run 'npm install' then 'npm start' to preview."
 echo ""
