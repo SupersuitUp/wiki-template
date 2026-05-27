@@ -127,6 +127,36 @@ Then edit the new file. The frontmatter and page anatomy are already in place.
 - **`onBrokenLinks: 'throw'`.** A broken cross-link fails the build.
 - **Homepage is the Start Here landing.** The file at `docs/start-here/index.mdx` carries `slug: /` and is both the wiki's homepage AND the Start Here category landing in the sidebar. Do NOT create a separate `docs/index.mdx` for the homepage. A standalone root index lives outside every sidebar group, so the homepage renders without a sidebar. Keep the canonical pattern: one file, two roles.
 
+## AI-native illustration system (built in)
+
+Every wiki forked from this template ships with a locked illustration pipeline at `illustrations/`. The shape, per the [design-systems-for-ai-generated-visuals](https://www.appliedai.wiki/concepts/design-systems-for-ai-generated-visuals) discipline:
+
+- **`illustrations/SPEC.md`** — the canonical visual identity for this wiki. Visual lineage, recurring character (optional), palette, banned vocabulary, per-render prompt template. One source of truth.
+- **`illustrations/refs/`** — locked reference images (`character-sheet.webp` if your wiki has a recurring character, `style-swatch.webp` for the visual register). Passed as `--input-image` on every render so identity stays coherent across many pages.
+- **`illustrations/scripts/render-page.sh`** — the canonical wrapper. Takes `<filename>` + `<scene>`, applies SPEC prompt template, passes the locked character ref, pre-flight greps for banned vocabulary, and auto-converts PNG → WebP (~90% smaller) into `static/img/illustrations/` for deploy.
+
+To use it:
+
+```bash
+./illustrations/scripts/render-page.sh "page-name.png" "<one-sentence scene>"
+```
+
+Embed the WebP path in MDX (always `.webp`, never `.png` in deployed content):
+
+```mdx
+![Literal scene description for accessibility and prompt archive.](/img/illustrations/page-name.webp)
+```
+
+**Fork-time setup.** After scaffolding a wiki from this template:
+
+1. Customize `illustrations/SPEC.md` for your wiki's visual identity. Customize the `PREFIX` and `SUFFIX` in `illustrations/scripts/render-page.sh` to match.
+2. Generate `illustrations/refs/character-sheet.webp` (if your wiki has a recurring character) and `illustrations/refs/style-swatch.webp` via the wrapper. These become the canonical references for every future render.
+3. Install `cwebp` once: `brew install webp`. Without it, the wrapper falls back to copying the PNG.
+
+The discipline is the whole point: locking the visual identity in this many places means changing it later is deliberate, not accidental. The wrapper is the only sanctioned way to call `chatgpt-images` for wiki illustrations; never call the image generator directly or the register will drift.
+
+See `illustrations/SPEC.md` and `illustrations/scripts/README.md` for the full discipline.
+
 ## Changelog (built in)
 
 Every wiki forked from this template ships with the `wiki-changelog` feature pre-wired:
