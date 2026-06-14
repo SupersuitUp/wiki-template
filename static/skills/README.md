@@ -21,6 +21,17 @@ Use it for:
 
 The local skill registry holds a thin discovery **stub** (frontmatter `name` + `description` so the harness can discover and trigger it; body = "fetch and follow `https://<this-wiki>/skills/<name>/SKILL.md`"). The stub is the shim; the hosted file is the content.
 
+## Where this wiki's intake skill comes from
+
+This folder is empty in the bare template on purpose: the intake skill is **personalized** (its name, triggers, URL, and flow all come from `wiki.config.json`), so it is generated at init rather than shipped with placeholder values.
+
+`npm run init` (or `npm run init:intake-skill` on its own) reads `intake_mode` from `wiki.config.json` and scaffolds `static/skills/<projectName-minus-wiki>-intake/SKILL.md` from the matching mode-template:
+
+- `scripts/templates/intake-skill/source-grounded.SKILL.md` — fold in external sources faithfully with citation (delegates to the canonical hosted `add-source` engine).
+- `scripts/templates/intake-skill/authored-canon.SKILL.md` — author net-new original philosophy that coheres with the canon.
+
+After init, the personalized skill lives here and is served at `<url>/skills/<name>/SKILL.md`. Register the local discovery stub globally per the init output.
+
 ## Format
 
 A hosted skill is a normal `SKILL.md`: YAML frontmatter (`name`, `description`) then the instructions. Same shape as a local skill. No special variant.

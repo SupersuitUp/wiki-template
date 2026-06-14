@@ -7,5 +7,7 @@
   "projectName": "your-wiki",
   "copyright": "Template Wiki",
   "noindex": true,
-  "description": "Canonical reference for the topic this wiki covers."
+  "description": "Canonical reference for the topic this wiki covers.",
+  "brand_os_url": "",
+  "intake_mode": "source-grounded"
 }

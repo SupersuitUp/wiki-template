@@ -23,6 +23,8 @@
     "projectName": { "type": "string", "description": "GitHub repo name" },
     "copyright": { "type": "string", "description": "Footer copyright text" },
     "noindex": { "type": "boolean", "description": "If true, robots noindex meta + disable sitemap" },
-    "description": { "type": "string", "description": "Site description used in llms.txt header" }
+    "description": { "type": "string", "description": "Site description used in llms.txt header" },
+    "brand_os_url": { "type": "string", "description": "Base URL of the brand OS (e.g. https://my-brand-os.vercel.app). Used by render-graphic.sh to fetch brand.txt and GABRs. Leave empty if no brand OS." },
+    "intake_mode": { "type": "string", "enum": ["source-grounded", "authored-canon"], "description": "How this wiki grows. source-grounded: fold in external sources faithfully with citation. authored-canon: author net-new original philosophy that coheres with the canon. Drives which intake skill scripts/init-intake-skill.sh scaffolds into static/skills/." }
   }
 }
