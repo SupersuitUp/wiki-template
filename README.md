@@ -26,6 +26,7 @@ A GitHub template repo for spinning up a new Docusaurus reference wiki with the 
 - **Noindex by default.** `robots.txt: Disallow: /` + `<meta name="robots" content="noindex, nofollow">`. Toggle via `wiki.config.json`.
 - **`llms.txt` + `llms-full.txt` at build time.** Auto-generated from your docs so well-behaved AI agents can read the wiki without crawling it.
 - **Page templates in `templates/`.** Copy-and-rename scaffolds for `concept.mdx`, `tool.mdx`, `playbook.mdx`, `case-study.mdx`.
+- **Hosted skills.** `static/skills/<name>/SKILL.md` is served openly at `/skills/<name>/SKILL.md` (the `skills/` path is excluded from the bot-block in `middleware.ts`) so agents can fetch and follow canonical skills as a single source of truth. See `static/skills/README.md`.
 
 ## How to use this template
 

@@ -23,8 +23,13 @@ export default function middleware(request: Request): Response | undefined {
 export const config = {
   // Run on HTML routes only. Skip static assets so we do not pay function
   // invocations on every CSS, JS, image, or font fetch.
+  //
+  // `skills/` is intentionally excluded too: this wiki hosts canonical agent
+  // SKILL.md files under static/skills/<name>/SKILL.md, served openly at
+  // /skills/<name>/SKILL.md so agents (including blocked-UA crawlers like
+  // ClaudeBot) can fetch and follow them. The rest of the wiki stays bot-blocked.
   matcher: [
-    '/((?!assets/|img/|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.json|.*\\.(?:js|css|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|map|json|xml)$).*)',
+    '/((?!assets/|img/|skills/|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.json|.*\\.(?:js|css|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|map|json|xml)$).*)',
   ],
   runtime: 'edge',
 };
