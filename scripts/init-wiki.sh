@@ -84,11 +84,17 @@ echo "=== Intake skill ==="
 bash "$ROOT/scripts/init-intake-skill.sh"
 
 echo ""
+read -r -p "Register this wiki's hosted skills into your global registry now? [Y/n]: " REG_INPUT
+if [[ -z "$REG_INPUT" || "$REG_INPUT" =~ ^[Yy]$ ]]; then
+  bash "$ROOT/scripts/register-skills.sh"
+fi
+
+echo ""
 echo "=== Next steps ==="
 echo "  1. Edit src/css/custom.css to set brand colors (the --ifm-color-primary-* group)."
 echo "  2. Replace static/img/favicon.png and static/img/docusaurus-social-card.jpg."
 echo "  3. Replace docs/start-here/index.md with the canonical entry point for this wiki."
 echo "  4. If you enabled field-note-sharers, paste the sidebar snippet printed above into sidebars.ts."
-echo "  5. Register the intake skill stub globally (see the 'Intake skill' output above)."
+echo "  5. If you skipped registration above, run 'npm run register-skills' to wire the hosted skills into global discovery."
 echo "  6. Run 'npm install' then 'npm start' to preview."
 echo ""

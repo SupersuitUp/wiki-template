@@ -30,7 +30,11 @@ This folder is empty in the bare template on purpose: the intake skill is **pers
 - `scripts/templates/intake-skill/source-grounded.SKILL.md` — fold in external sources faithfully with citation (delegates to the canonical hosted `add-source` engine).
 - `scripts/templates/intake-skill/authored-canon.SKILL.md` — author net-new original philosophy that coheres with the canon.
 
-After init, the personalized skill lives here and is served at `<url>/skills/<name>/SKILL.md`. Register the local discovery stub globally per the init output.
+After init, the personalized skill lives here and is served at `<url>/skills/<name>/SKILL.md`.
+
+## Registering hosted skills into global discovery
+
+`npm run register-skills` walks every skill in this folder and, for each, writes a thin **discovery stub** (frontmatter `name` + `description` copied from the hosted file; body = "fetch and follow the hosted URL") into your primary skill registry, symlinked into whichever satellite registries exist. Stubs are namespaced by this wiki's prefix (`skill_prefix` in `wiki.config.json`, default `projectName` minus a trailing `-wiki`), so `humanperformance-wiki` registers `humanperformance-intake`, `humanperformance-<other>`, etc., without colliding with other wikis. Names that already carry the prefix pass through unchanged. `init` offers to run this for you.
 
 ## Format
 
