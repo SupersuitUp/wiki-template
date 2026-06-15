@@ -16,6 +16,16 @@ const config: Config = {
 
   onBrokenLinks: 'throw',
 
+  // Rust toolchain (Rspack + SWC) instead of webpack + Babel. Cuts cold build
+  // time roughly in half. Safe because the custom plugins use only getThemePath
+  // (no configureWebpack / Babel hooks) and there are no custom Babel plugins.
+  // Requires @docusaurus/faster (already a devDependency).
+  // (On Docusaurus < 3.10 this flag is named `experimental_faster`.)
+  future: {
+    v4: true,
+    faster: true,
+  },
+
   markdown: {
     hooks: {
       onBrokenMarkdownLinks: 'warn',
