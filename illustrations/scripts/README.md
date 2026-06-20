@@ -45,7 +45,7 @@ If you have not yet generated the canonical references for your wiki:
 
 ## Why one script
 
-Per the [design-systems-for-ai-generated-visuals](https://www.appliedai.wiki/concepts/design-systems-for-ai-generated-visuals) discipline: bundle the spec, refs, prompt template, and banned-term list into a single callable that becomes the only way to generate corpus artifacts. Without this bundling, each operator interprets the spec a little differently, and the visual register drifts.
+Per the [agentic-brand-os](https://www.appliedai.wiki/concepts/agentic-brand-os) discipline: bundle the spec, refs, prompt template, and banned-term list into a single callable that becomes the only way to generate corpus artifacts. Without this bundling, each operator interprets the spec a little differently, and the visual register drifts.
 
 ## Changing the visual register
 

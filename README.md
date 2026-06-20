@@ -131,7 +131,7 @@ Then edit the new file. The frontmatter and page anatomy are already in place.
 
 ## AI-native illustration system (built in)
 
-Every wiki forked from this template ships with a locked illustration pipeline at `illustrations/`. The shape, per the [design-systems-for-ai-generated-visuals](https://www.appliedai.wiki/concepts/design-systems-for-ai-generated-visuals) discipline:
+Every wiki forked from this template ships with a locked illustration pipeline at `illustrations/`. The shape, per the [agentic-brand-os](https://www.appliedai.wiki/concepts/agentic-brand-os) discipline:
 
 - **`illustrations/SPEC.md`** — the canonical visual identity for this wiki. Visual lineage, recurring character (optional), palette, banned vocabulary, per-render prompt template. One source of truth.
 - **`illustrations/refs/`** — locked reference images (`character-sheet.webp` if your wiki has a recurring character, `style-swatch.webp` for the visual register). Passed as `--input-image` on every render so identity stays coherent across many pages.

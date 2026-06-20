@@ -4,7 +4,7 @@ The single canonical document for this wiki's visual identity. Every illustratio
 
 A future agent picking up an illustration job should be able to read this file plus the two canonical reference images in `refs/` and produce a coherent new page hero without any other context.
 
-> **Discipline note.** Per [design-systems-for-ai-generated-visuals](https://www.appliedai.wiki/concepts/design-systems-for-ai-generated-visuals): "References carry the recurring anchors. The prompt carries the variable per-render content." Do not improvise the character, palette, or line vocabulary. Do not skip passing the canonical references on every render.
+> **Discipline note.** Per [agentic-brand-os](https://www.appliedai.wiki/concepts/agentic-brand-os): "References carry the recurring anchors. The prompt carries the variable per-render content." Do not improvise the character, palette, or line vocabulary. Do not skip passing the canonical references on every render.
 
 > **TEMPLATE NOTE.** Everything below this line is a placeholder customized per wiki. Replace the placeholders with your wiki's actual visual identity, then delete this template note. After customization, regenerate `refs/character-sheet.webp` (if your wiki has a recurring character) and `refs/style-swatch.webp` via the wrapper, and update the `PREFIX` / `SUFFIX` strings in `scripts/render-page.sh` to match.
 
