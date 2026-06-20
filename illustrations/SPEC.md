@@ -102,11 +102,11 @@ There is one canonical interface: `illustrations/scripts/render-page.sh`. Do not
 5. Embed the WebP in the MDX:
 
    ```mdx
-   ![Literal scene description for accessibility and prompt archive.](/img/illustrations/<filename>.webp)
+   ![<the exact scene prompt you passed to the renderer, verbatim>](/img/illustrations/<filename>.webp)
    ```
 
 6. Always embed `.webp` paths. Never `.png`. The static folder only carries WebPs.
-7. The alt text is the prompt archive for that page. Be literal in it; describe the scene, not the meaning. A future regeneration reads the alt text plus this SPEC and reproduces the intent.
+7. **The alt text MUST be the exact prompt you used to generate the image, verbatim** (the scene string passed to the renderer). It is the prompt archive: a future regeneration reads the alt text plus this SPEC and reproduces the image. Do not write a separate, nicer description and do not paraphrase; paste the literal prompt. This is a hard convention for every wiki forked from this template, whatever image system the fork uses.
 
 See `scripts/README.md` for more.
 
