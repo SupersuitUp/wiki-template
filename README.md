@@ -127,6 +127,7 @@ Then edit the new file. The frontmatter and page anatomy are already in place.
 - **Further Reading at the bottom.** Internal links first, outside sources second.
 - **Absolute paths for cross-links.** `/concepts/term-name`, not relative paths.
 - **`onBrokenLinks: 'throw'`.** A broken cross-link fails the build.
+- **Article hero = social-share image.** If a page embeds an image (hero comic, strip, illustration), also set `image: "<site-absolute path>"` in its frontmatter (e.g. `image: "/img/illustrations/<slug>.webp"`). Docusaurus renders it as the page's `og:image`/`twitter:image`. Add or update the field in the same edit as the hero embed. Docusaurus validates the file exists at build time, so never point it at a placeholder path.
 - **Homepage is the Start Here landing.** The file at `docs/start-here/index.mdx` carries `slug: /` and is both the wiki's homepage AND the Start Here category landing in the sidebar. Do NOT create a separate `docs/index.mdx` for the homepage. A standalone root index lives outside every sidebar group, so the homepage renders without a sidebar. Keep the canonical pattern: one file, two roles.
 
 ## AI-native illustration system (built in)
