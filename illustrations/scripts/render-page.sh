@@ -61,13 +61,21 @@ PREFIX="An illustration for this wiki. The scene: "
 SUFFIX=". Drawn in <your-visual-register-description>. <your line vocabulary>. Palette: <your palette>. Generous white space, at least 30 percent of the canvas left as untouched paper. No text, no labels, no captions inside the image. Not photorealistic. Not 3D. Not anime or manga. Not Pixar. Not glossy digital art. <recurring character details if applicable>."
 
 # -----------------------------------------------------------------------------
-# Reference image. Skip this section if your wiki has no recurring character.
+# Reference images. Pass AS MANY reminders of the recurring character as exist:
+# BOTH the single-figure MASTER and the multi-view SHEET. The master locks the
+# clean identity of record; the sheet gives the model many looks at the body,
+# arms, and proportions from several poses at once. Passing only a single
+# portrait is how a character drifts or gets anthropomorphized when other
+# characters share the frame. Skip this section if your wiki has no recurring
+# character. (See the master-first workflow in illustrations/SPEC.md.)
 # -----------------------------------------------------------------------------
-REF=""
-for candidate in illustrations/refs/character-sheet.webp illustrations/refs/character-sheet.png; do
+REF_ARGS=()
+for candidate in \
+  illustrations/refs/character-master.webp illustrations/refs/character-master.png \
+  illustrations/refs/character-sheet.webp  illustrations/refs/character-sheet.png; do
   if [[ -f "$candidate" ]]; then
-    REF="$candidate"
-    break
+    REF_ARGS+=(--input-image "$candidate")
+    echo "    ref: $candidate"
   fi
 done
 
@@ -76,21 +84,15 @@ PROMPT="${PREFIX}${SCENE}${SUFFIX}"
 mkdir -p illustrations static/img/illustrations
 echo "==> rendering illustrations/$FILENAME"
 
-if [[ -n "$REF" ]]; then
-  uv run ~/.agents/skills/chatgpt-images/scripts/generate_image.py \
-    --prompt "$PROMPT" \
-    --filename "illustrations/$FILENAME" \
-    --input-image "$REF" \
-    --size 1536x1024 \
-    --quality high
-else
-  echo "(no canonical character reference found at illustrations/refs/character-sheet.{webp,png}; rendering without --input-image)"
-  uv run ~/.agents/skills/chatgpt-images/scripts/generate_image.py \
-    --prompt "$PROMPT" \
-    --filename "illustrations/$FILENAME" \
-    --size 1536x1024 \
-    --quality high
+if [[ ${#REF_ARGS[@]} -eq 0 ]]; then
+  echo "(no character reference found at illustrations/refs/character-{master,sheet}.{webp,png}; rendering without references)"
 fi
+uv run ~/.agents/skills/chatgpt-images/scripts/generate_image.py \
+  --prompt "$PROMPT" \
+  --filename "illustrations/$FILENAME" \
+  "${REF_ARGS[@]}" \
+  --size 1536x1024 \
+  --quality high
 
 # Convert PNG → WebP for deploy. The PNG stays in illustrations/ as the source
 # archive; the WebP in static/img/illustrations/ is what the MDX references
