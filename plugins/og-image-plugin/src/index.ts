@@ -99,7 +99,8 @@ export default function ogImagePlugin(
         if (!fs.existsSync(htmlPath)) continue;
         let html = fs.readFileSync(htmlPath, 'utf8');
         // A page that already carries og:image (frontmatter hero) keeps it.
-        if (html.includes('property="og:image"')) continue;
+        // The html-minifier may strip attribute quotes, so match both forms.
+        if (/property=["']?og:image["']?/.test(html)) continue;
 
         const rawTitle = html.match(/<title[^>]*>([^<]*)<\/title>/)?.[1] ?? siteTitle;
         const suffix = ` | ${siteTitle}`;
@@ -107,7 +108,7 @@ export default function ogImagePlugin(
           rawTitle.endsWith(suffix) ? rawTitle.slice(0, -suffix.length) : rawTitle
         );
         const description = decodeEntities(
-          html.match(/<meta[^>]+name="description"[^>]+content="([^"]*)"/)?.[1] ?? ''
+          html.match(/<meta[^>]+name=["']?description["']?[^>]*content="([^"]*)"/)?.[1] ?? ''
         );
 
         const name = cardName(route);
@@ -244,10 +245,10 @@ export default function ogImagePlugin(
           `<meta property="og:image" content="${imageUrl}">` +
           `<meta property="og:image:width" content="1200">` +
           `<meta property="og:image:height" content="630">` +
-          (html.includes('name="twitter:image"')
+          (/name=["']?twitter:image["']?/.test(html)
             ? ''
             : `<meta name="twitter:image" content="${imageUrl}">`) +
-          (html.includes('name="twitter:card"')
+          (/name=["']?twitter:card["']?/.test(html)
             ? ''
             : `<meta name="twitter:card" content="summary_large_image">`);
         html = html.replace('</head>', `${inject}</head>`);
