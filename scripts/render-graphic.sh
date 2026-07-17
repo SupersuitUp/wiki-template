@@ -40,7 +40,7 @@ BRAND_OS_URL="${BRAND_OS_URL%/}"
 
 BRAND_TXT_URL="${BRAND_OS_URL}/brand.txt"
 GABR_BASE_URL="${BRAND_OS_URL}/brand/generation-layer/golden-atomic-brand-references"
-CACHE_KEY=$(echo "$BRAND_OS_URL" | sed 's|https\?://||; s|/.*||')
+CACHE_KEY=$(echo "$BRAND_OS_URL" | sed -E 's|^https?://||; s|/.*||')
 CACHE_DIR="$HOME/.agents/agentic_brand_oses/${CACHE_KEY}/gabrs"
 BRAND_TXT_CACHE="$HOME/.agents/agentic_brand_oses/${CACHE_KEY}/brand.txt"
 
