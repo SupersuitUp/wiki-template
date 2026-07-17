@@ -26,6 +26,17 @@
     "description": { "type": "string", "description": "Site description used in llms.txt header" },
     "brand_os_url": { "type": "string", "description": "Base URL of the brand OS (e.g. https://my-brand-os.vercel.app). Used by render-graphic.sh to fetch brand.txt and GABRs. Leave empty if no brand OS." },
     "intake_mode": { "type": "string", "enum": ["source-grounded", "authored-canon"], "description": "How this wiki grows. source-grounded: fold in external sources faithfully with citation. authored-canon: author net-new original philosophy that coheres with the canon. Drives which intake skill scripts/init-intake-skill.sh scaffolds into static/skills/." },
-    "skill_prefix": { "type": "string", "description": "Namespace for this wiki's skills when registered into the global registry (e.g. 'humanperformance' -> humanperformance-intake). Defaults to projectName minus a trailing -wiki. Used by scripts/register-skills.sh." }
+    "skill_prefix": { "type": "string", "description": "Namespace for this wiki's skills when registered into the global registry (e.g. 'humanperformance' -> humanperformance-intake). Defaults to projectName minus a trailing -wiki. Used by scripts/register-skills.sh." },
+    "og": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Brand tokens for the auto-generated per-page social share cards (plugins/og-image-plugin). Every page without a frontmatter `image:` hero gets a card built from these at build time. Omit for the template defaults.",
+      "properties": {
+        "bg": { "type": "string", "description": "Card background color (hex)" },
+        "accent": { "type": "string", "description": "Accent color for the kicker and bar (hex)" },
+        "text": { "type": "string", "description": "Title text color (hex)" },
+        "muted": { "type": "string", "description": "Description/domain text color (hex)" }
+      }
+    }
   }
 }

@@ -44,6 +44,10 @@ const config: Config = {
   plugins: [
     './plugins/search-plugin',
     './plugins/creation-date-plugin',
+    // Per-page social share cards: every page without a frontmatter `image:`
+    // hero gets a branded og:image card generated at build time. Brand tokens
+    // come from the optional `og` block in wiki.config.json.
+    ['./plugins/og-image-plugin', (wiki as { og?: Record<string, string> }).og ?? {}],
   ],
 
   presets: [

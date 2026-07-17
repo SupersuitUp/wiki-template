@@ -24,6 +24,7 @@
     "@docusaurus/faster": "3.10.1",
     "@docusaurus/preset-classic": "3.10.1",
     "@mdx-js/react": "^3.0.0",
+    "@resvg/resvg-js": "^2.6.2",
     "clsx": "^2.0.0",
     "glob": "^13.0.6",
     "gray-matter": "^4.0.3",
@@ -32,6 +33,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "remark": "^15.0.1",
+    "satori": "^0.26.0",
     "strip-markdown": "^6.0.0"
   },
   "devDependencies": {
