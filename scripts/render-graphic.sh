@@ -128,21 +128,23 @@ SUFFIX=$(awk -v slug="$TYPE_SLUG" '
 ' "$BRAND_TXT_CACHE")
 
 if [[ -z "$SUFFIX" ]]; then
-  echo "ERROR: could not extract suffix for type '$TYPE_SLUG' from brand.txt cache."
-  echo "Delete $BRAND_TXT_CACHE and re-run to refresh."
-  exit 1
+  # The current brand.txt standard folds comic/illustration formatting into the
+  # preamble instead of a per-type suffix line. Absence is not an error: the
+  # preamble already carries the COMIC FORMAT rules. Continue with an empty suffix.
+  echo "==> no per-type suffix in brand.txt; using preamble formatting only."
+  SUFFIX=""
 fi
 
 # ---------------------------------------------------------------------------
 # Resolve GABR paths
 # ---------------------------------------------------------------------------
 # Default protagonist GABR — override with DEFAULT_PROTAGONIST_GABR env var
-DEFAULT_PROTAGONIST_GABR="${DEFAULT_PROTAGONIST_GABR:-gabr-18-default-client.png}"
+DEFAULT_PROTAGONIST_GABR="${DEFAULT_PROTAGONIST_GABR:-gabr-02-midas.png}"
 REF_PATH=$(download_gabr "$DEFAULT_PROTAGONIST_GABR")
 
 EXTRA_PATHS=()
 if [[ "$COMIC_MODE" == true ]]; then
-  COMIC_GABR="${COMIC_GABR:-gabr-20-perspectives-comic.png}"
+  COMIC_GABR="${COMIC_GABR:-gabr-08-comic-kit.png}"
   EXTRA_PATHS+=("$(download_gabr "$COMIC_GABR")")
 fi
 for slug in ${EXTRA_SLUGS[@]+"${EXTRA_SLUGS[@]}"}; do
