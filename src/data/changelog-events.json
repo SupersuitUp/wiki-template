@@ -1,0 +1,44 @@
+{
+  "changeEvents": [
+    {
+      "id": "reference/graphic-style@e04f661dbc5e3550aa78e17398ca1f0d7b16f4eb",
+      "type": "new",
+      "date": "2026-05-15T22:43:28-05:00",
+      "docKey": "reference/graphic-style",
+      "routePath": "/reference/graphic-style",
+      "section": "reference",
+      "title": "Graphic Style",
+      "description": "Visual conventions for illustrations and diagrams on this wiki. The default is comic-strip article summaries in the Supersuit Up family style."
+    },
+    {
+      "id": "concepts/sample-concept@4adacf5bb978736e994e7646544b6d67667cdc84",
+      "type": "new",
+      "date": "2026-05-15T10:42:05-05:00",
+      "docKey": "concepts/sample-concept",
+      "routePath": "/concepts/sample-concept",
+      "section": "concepts",
+      "title": "Sample Concept",
+      "description": "A one-line definition of the sample concept. Quotable, plain, no rhetorical flourishes."
+    },
+    {
+      "id": "reference/glossary@4adacf5bb978736e994e7646544b6d67667cdc84",
+      "type": "new",
+      "date": "2026-05-15T10:42:05-05:00",
+      "docKey": "reference/glossary",
+      "routePath": "/reference/glossary",
+      "section": "reference",
+      "title": "Glossary",
+      "description": "One-line-per-term summary across the whole wiki."
+    },
+    {
+      "id": "reference/voice-rules@4adacf5bb978736e994e7646544b6d67667cdc84",
+      "type": "new",
+      "date": "2026-05-15T10:42:05-05:00",
+      "docKey": "reference/voice-rules",
+      "routePath": "/reference/voice-rules",
+      "section": "reference",
+      "title": "Voice Rules",
+      "description": "Writing constraints every page is held to. Edit per wiki."
+    }
+  ]
+}

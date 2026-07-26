@@ -168,7 +168,10 @@ Every wiki forked from this template ships with the `wiki-changelog` feature pre
 - **`/changelog`** is a full month-grouped log of every doc in the wiki, newest first. Lives at `docs/changelog.mdx` and pulls data from the `creation-date-plugin`.
 - **`<ChangelogWidget limit={8} />`** is embedded near the bottom of the homepage (`docs/start-here/index.mdx`). It surfaces the most recently created or updated docs as a compact list.
 - Dates are derived from git history (first commit per file = creation, last commit = update; renames followed). No frontmatter `creation_date` field required.
-- `vercel.json` includes `git fetch --unshallow` in the build command so deployed dates reflect actual file creation, not the deploy commit.
+
+**Commit `src/data/changelog-events.json`.** Vercel's build container clones the repo shallow AND strips the git remote, so the build can neither see older history nor fetch it. `git fetch --unshallow` in a build command exits 0 having done nothing; earlier versions of this README told you to do exactly that, and it never worked. History has to ride along in the repo instead.
+
+So the plugin keeps a snapshot: on a full clone (your laptop) a build rewrites `src/data/changelog-events.json` from git, and on a shallow clone it leaves that file alone and merges it with whatever recent history it can see. Run a local build and commit the JSON when it changes, or production quietly shows only the last few weeks. Two related traps the plugin handles for you: paths from `git log --name-status` are repo-root-relative (so a site in a subdirectory needs its prefix stripped), and the commit where a shallow clone is cut off looks like a root commit, which would otherwise invent a "New" event for every file that merely existed at that point.
 
 **Fork-time tuning.** Both `src/components/ChangelogWidget.tsx` and `src/components/Changelog.tsx` carry a `SECTION_LABELS` map at the top of the file. The template ships with labels for the default sections (`start-here`, `concepts`, `reference`). If you add or rename top-level folders under `docs/`, update both `SECTION_LABELS` maps to match — otherwise the changelog will fall back to a title-cased version of the folder slug.
 
