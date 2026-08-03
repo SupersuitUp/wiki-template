@@ -18,7 +18,7 @@ read -r -p "Production URL (e.g. https://example.wiki): " URL
 read -r -p "GitHub org (e.g. SupersuitUp): " ORG
 read -r -p "GitHub repo name (e.g. my-wiki): " PROJECT
 read -r -p "Description (used in llms.txt header): " DESCRIPTION
-read -r -p "Brand OS base URL (e.g. https://my-brand-os.vercel.app — leave blank if none): " BRAND_OS_URL
+read -r -p "Visual register in one sentence (blank for the default cream editorial look): " HERO_REGISTER
 read -r -p "Block search engine indexing? [Y/n]: " NOINDEX_INPUT
 read -r -p "Intake mode [source-grounded/authored-canon] (default source-grounded): " INTAKE_MODE_INPUT
 
@@ -50,8 +50,16 @@ cat > "$CONFIG" << EOF
   "copyright": "$COPYRIGHT",
   "noindex": $NOINDEX,
   "description": "$DESCRIPTION",
-  "brand_os_url": "$BRAND_OS_URL",
-  "intake_mode": "$INTAKE_MODE"
+  "intake_mode": "$INTAKE_MODE",
+  "hero_register": {
+    "mode": "local",
+    "layout": "multipanel",
+    "defaultPanels": 3,
+    "register": "$HERO_REGISTER",
+    "spec": "illustrations/SPEC.md",
+    "refs": [],
+    "outputDir": "static/img/illustrations"
+  }
 }
 EOF
 

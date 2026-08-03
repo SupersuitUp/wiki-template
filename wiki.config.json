@@ -8,6 +8,14 @@
   "copyright": "Template Wiki",
   "noindex": true,
   "description": "Canonical reference for the topic this wiki covers.",
-  "brand_os_url": "",
-  "intake_mode": "source-grounded"
+  "intake_mode": "source-grounded",
+  "hero_register": {
+    "mode": "local",
+    "layout": "multipanel",
+    "defaultPanels": 3,
+    "register": "",
+    "spec": "illustrations/SPEC.md",
+    "refs": [],
+    "outputDir": "static/img/illustrations"
+  }
 }

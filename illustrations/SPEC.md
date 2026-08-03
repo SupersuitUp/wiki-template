@@ -22,7 +22,14 @@ A pose that disagrees with the master is a defective render; regenerate it from 
 
 **When a defect survives repeated prompt rewrites, AUDIT THE REFERENCES — the references are teaching it.** No prompt language beats a reference image that literally depicts the defect. The fix order: (1) crop-zoom every reference being passed and find which one shows the defect; (2) regenerate that reference from the master in ISOLATION (plain ground, single figure) until it is right; (3) re-lock, THEN return to scene composites. Never iterate a character defect inside a complex scene — fix the reference first and the composites inherit it for free. Corollary: composite the multi-view sheet from the locked pose files (PIL/ImageMagick), never by generation — a generated sheet re-draws the character and can invent anatomy that then propagates into every render that passes the sheet.
 
-> **TEMPLATE NOTE.** Everything below this line is a placeholder customized per wiki. Replace the placeholders with your wiki's actual visual identity, then delete this template note. After customization, lock `refs/character-master.png` and `refs/character-sheet.png` (if your wiki has a recurring character, master-first per the workflow above) and `refs/style-swatch.webp`, and update the `PREFIX` / `SUFFIX` strings in `scripts/render-page.sh` to match.
+> **TEMPLATE NOTE.** Everything below this line is a placeholder customized per wiki.
+> Replace the placeholders with your wiki's actual visual identity, then delete this
+> template note.
+>
+> The minimum to be productive is smaller than it looks: write one sentence into
+> `hero_register.register` in `wiki.config.json`, put 2 to 4 blessed style images in
+> `refs/`, and you are done. Everything about recurring characters is opt-in, and most
+> wikis should skip it.
 
 ---
 
@@ -32,11 +39,22 @@ Describe the visual register your wiki uses, in 2-4 sentences. Reference a recog
 
 State explicitly what the register is NOT (e.g. "Not photorealistic. Not 3D. Not anime. Not Pixar. Not glossy digital art.").
 
-## Recurring character (OPTIONAL — customize or remove)
+## Recurring character (OPT-IN, off by default)
 
-If your wiki has a recurring narrator-protagonist who appears on most pages, describe them here in detail: age, ethnicity, hair, face, build, clothing register, posture. Be specific enough that a render based on this description alone produces a recognizable figure.
+**The default visual identity is style-only: 2 to 4 blessed reference images in
+`refs/`, all passed on every render, and no recurring person.** That is enough to lock
+a look, and it skips the master-first character workflow, which is the most
+failure-prone part of this system and the step most likely to burn a first hour and a
+first ten dollars.
 
-If your wiki has NO recurring character, delete this section.
+Add a recurring character only if you actually want one. If you do, the master-first
+workflow above is not optional; it is the thing that keeps the character from drifting.
+
+If you opt in, describe them here in detail: age, ethnicity, hair, face, build,
+clothing register, posture. Be specific enough that a render based on this description
+alone produces a recognizable figure.
+
+If your wiki has no recurring character, which is the default, delete this section.
 
 ## Canonical pairings (OPTIONAL — customize or remove)
 
@@ -58,13 +76,28 @@ Strict palette, applied as watercolor washes over hand-drawn ink line (or whatev
 
 Describe the line style. Hand-drawn vs vector-clean. Varied weight vs uniform. Watercolor wash showing through vs flat fill. Paper texture present or not.
 
-## Composition rules (CUSTOMIZE)
+## Composition rules
 
-- **Single focal scene per illustration.** One thing is happening.
+- **A hero is a STRIP OF BEATS, not a plate.** The default is 3 panels of equal size
+  in a horizontal row, separated by clean cream gutters with no drawn borders. One
+  consistent world and cast across every panel.
+- **Beat two shows the CONSEQUENCE of beat one.** A middle panel that only restates
+  the first is a plate with extra steps.
+- **Write the scene AS BEATS.** A scene handed over as one paragraph renders as one
+  plate whatever the layout instruction says. This is the single most common failure,
+  and it is what `check_panels.py` catches.
+- **One elegant plate is the EXCEPTION**, used only when the idea genuinely is a
+  single image. Reach for it with `--single`, deliberately.
 - **Generous white space.** At least 30% of the canvas untouched paper.
 - **No text in the image.** Page titles and captions live in the surrounding MDX.
 
 Add any wiki-specific composition rules here.
+
+> **Reversed 2026-07-26, family-wide.** This section said "Single focal scene per
+> illustration. One thing is happening." until 2026-08-03, long after the reversal, so
+> every wiki forked from this template was born carrying the law that had already been
+> overturned. These pages argue a before and an after, and one frame flattens that into
+> decoration. Existing single-plate heroes age out; they are not backfilled.
 
 ## Banned visual vocabulary (CUSTOMIZE)
 
@@ -85,13 +118,26 @@ The default register should be grounded, not glamorous. That works for still lif
 
 When a page makes a claim about excellence (a model figure, an aspirational partner, a paragon of the wiki's subject) and the illustration shows average-grade subjects, the image undercuts the text. In those scenes, describe the figure as **visibly excellent** in the scene prompt: clearly beautiful, capable, radiant, well-presented. The visual register stays locked; the figure is rendered as the children's-book version of clearly excellent.
 
-## Per-render prompt template (CUSTOMIZE)
+## Per-render prompt template
 
-This is the template the wrapper script applies. The wrapper takes a scene from the operator and substitutes it into `[PAGE SCENE]`:
+The door assembles every prompt from four blocks, in this order:
 
-> An illustration for [your-wiki-name]. The scene: [PAGE SCENE]. Drawn in [your-visual-register-description]. [Your line vocabulary]. Palette: [your-palette]. [Composition rules]. [Banned vocabulary as negative space]. [Recurring character details if applicable]. [Canonical pairing details if applicable].
+1. **The register**, from `hero_register.register` in `wiki.config.json`.
+2. **The layout law**, the panel law or the single-plate line, owned by the door.
+3. **The scene**, your beats.
+4. **The no-text law**, owned by the door.
 
-Edit the `PREFIX` and `SUFFIX` in `scripts/render-page.sh` to match.
+**The register lives in `wiki.config.json`, not in this file and not in the script.**
+Earlier versions of this template asked you to keep `PREFIX` and `SUFFIX` strings inside
+the render script in sync with prose here, which is two copies of one fact and they
+drifted. This file is the fuller reasoning for humans and agents; the one sentence in
+`hero_register.register` is what actually reaches the model.
+
+To see exactly what will be sent, without spending anything:
+
+```bash
+./illustrations/scripts/render-hero.sh --dry-run <slug> "<your beats>"
+```
 
 ## Canonical reference images
 
@@ -104,14 +150,20 @@ Regenerate either reference only when the visual identity is explicitly changing
 
 ## Workflow for generating a new page illustration
 
-There is one canonical interface: `illustrations/scripts/render-page.sh`. Do not call `chatgpt-images` directly. The wrapper applies this SPEC, passes the locked character reference, pre-flight-checks for banned vocabulary, and auto-converts the PNG output to WebP for deploy.
+There is one canonical interface: `illustrations/scripts/render-hero.sh`. Do not call the generator directly. The door applies the register, owns the panel law, passes every blessed reference, pre-flight-checks for banned vocabulary, converts the PNG to WebP, copies provenance next to the shipped asset, and refuses a render that came back as a plate.
 
 1. Read this file.
-2. Identify the page being illustrated and write a one-sentence scene description.
-3. From the repo root, run:
+2. Identify the page and write the argument AS BEATS, not as one paragraph.
+3. Dry-run it first. This costs nothing:
 
    ```bash
-   ./illustrations/scripts/render-page.sh <output-filename> "<scene>"
+   ./illustrations/scripts/render-hero.sh --dry-run <slug> "<beat one>. <beat two>. <beat three>."
+   ```
+
+4. When the prompt reads right, render:
+
+   ```bash
+   ./illustrations/scripts/render-hero.sh <slug> "<beat one>. <beat two>. <beat three>."
    ```
 
 4. The wrapper writes the source PNG to `illustrations/<filename>.png` and the deploy WebP to `static/img/illustrations/<filename>.webp` (or wherever your wiki serves static assets).
