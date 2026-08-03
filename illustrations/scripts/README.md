@@ -7,14 +7,22 @@ One canonical script: **`render-hero.sh`**. It is the only sanctioned way to ren
 Dry-run first. It assembles and prints the whole prompt, calls nothing, and costs nothing:
 
 ```bash
-./illustrations/scripts/render-hero.sh --dry-run <slug> "<beat one>. <beat two>. <beat three>."
+./illustrations/scripts/render-hero.sh --dry-run \
+  --title "THE PAGE TITLE" --labels "BEFORE|THE MOVE|AFTER" \
+  <slug> "<beat one>. <beat two>. <beat three>."
 ```
 
 When the prompt reads right, render:
 
 ```bash
-./illustrations/scripts/render-hero.sh <slug> "<beat one>. <beat two>. <beat three>."
+./illustrations/scripts/render-hero.sh \
+  --title "THE PAGE TITLE" --labels "BEFORE|THE MOVE|AFTER" \
+  <slug> "<beat one>. <beat two>. <beat three>."
 ```
+
+**The hero carries text.** `--title` is required (pass `--no-text` to opt out).
+The title and the per-panel labels are spelled into the prompt verbatim, so a
+reader who only looks at the picture gets the gist.
 
 **Write the scene AS BEATS, not as one paragraph.** A hero is a strip of beats, and a
 scene handed over as one paragraph renders as one plate whatever the layout instruction

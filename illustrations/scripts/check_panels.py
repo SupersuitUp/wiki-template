@@ -24,7 +24,7 @@ from pathlib import Path
 from PIL import Image
 
 
-def _light_fraction(img, light_min):
+def _light_fraction(img, light_min, top_skip_frac=0.0):
     """What fraction of each column is paper-light, in one pass over the buffer.
 
     Fraction, NOT uniformity. The first version of this asked whether a column was
@@ -42,20 +42,33 @@ def _light_fraction(img, light_min):
     """
     w, h = img.size
     px = img.load()
+    y0 = int(h * top_skip_frac)
+    span = h - y0
     out = []
     for x in range(w):
         lit = 0
-        for y in range(h):
+        for y in range(y0, h):
             if px[x, y] >= light_min:
                 lit += 1
-        out.append(lit / h)
+        out.append(lit / span)
     return out
 
 
 def count_panels(path, *, min_gutter_px: int = 8, light_min: float = 200.0,
-                 min_light_frac: float = 0.90) -> int:
+                 min_light_frac: float = 0.90, top_skip_frac: float = 0.18) -> int:
+    """Count the panels, ignoring the top band of the image.
+
+    The band is skipped because a hero carries a TITLE BAR across its full width
+    (the lettering law, reversed 2026-08-03). A full-width bar means gutter columns
+    are no longer light for their whole height, so measuring the entire column
+    drops them to roughly 0.88 and the detector refuses a correct hero.
+
+    Skipping the top band costs nothing on a hero with no title: the panels still
+    run the full height, so their gutters are still found in the remaining 82%.
+    """
     img = Image.open(path).convert("L")
-    flags = [f >= min_light_frac for f in _light_fraction(img, light_min)]
+    flags = [f >= min_light_frac
+             for f in _light_fraction(img, light_min, top_skip_frac)]
     w = len(flags)
 
     # Walk in from both edges: leading and trailing gutter-ish columns are margins.

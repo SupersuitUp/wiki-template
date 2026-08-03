@@ -97,6 +97,46 @@ def textured_strip(path, panels, w=1536, h=1024, gutter=40, noise=14, arrow=True
     return path
 
 
+def titled_strip(path, panels, w=1536, h=1024, gutter=40, bar_frac=0.12):
+    """A strip with a TITLE BAR across the top, which is the default shape here
+    after the lettering law was reversed on 2026-08-03.
+
+    The bar spans the FULL width, so a gutter column is no longer light for its
+    whole height. A detector that measures light fraction over the entire column
+    sees roughly 0.88 in the gutters and can drop below its threshold, refusing a
+    perfectly good hero. So the top band is skipped before counting.
+    """
+    img = Image.new("RGB", (w, h), (243, 238, 224))
+    d = ImageDraw.Draw(img)
+    bar = int(h * bar_frac)
+    d.rectangle([0, 0, w, bar], fill=(35, 32, 30))          # solid dark title bar
+    pw = (w - gutter * (panels - 1)) // panels
+    for i in range(panels):
+        x0 = i * (pw + gutter)
+        d.rectangle([x0, bar + 10, x0 + pw, h], fill=(70, 65, 60))
+    img.save(path)
+    return path
+
+
+class TestTitleBar(unittest.TestCase):
+    """The lettering reversal put a full-width bar at the top of every hero."""
+
+    def test_a_title_bar_does_not_hide_the_gutters(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = titled_strip(pathlib.Path(t) / "titled.png", 3)
+            self.assertEqual(cp.count_panels(p), 3)
+
+    def test_titled_four_panel(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = titled_strip(pathlib.Path(t) / "t4.png", 4)
+            self.assertEqual(cp.count_panels(p), 4)
+
+    def test_a_titled_plate_is_still_one(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = titled_strip(pathlib.Path(t) / "t1.png", 1)
+            self.assertEqual(cp.count_panels(p), 1)
+
+
 class TestRealRenderShapes(unittest.TestCase):
     """Earned from the first real render. The detector refused a correct 3-beat
     strip, and looking at the image is what caught it rather than trusting the
