@@ -162,6 +162,19 @@ command -v cwebp >/dev/null 2>&1 || {
   echo "ERROR: cwebp is not installed. Install it with:" >&2
   echo "  brew install webp" >&2
   exit 1; }
+# Check the key HERE, not only inside the generator. The generator checks it too, but
+# by then the door has already printed "rendering" and uv has spun up an environment,
+# so a missing key reads as "it started and then broke" rather than "it refused."
+[[ -n "${OPENAI_API_KEY:-}" ]] || {
+  echo "ERROR: OPENAI_API_KEY is not set." >&2
+  echo "" >&2
+  echo "  1. Get a key at https://platform.openai.com/api-keys" >&2
+  echo "  2. export OPENAI_API_KEY='sk-...'" >&2
+  echo "  3. Add that same line to ~/.zshrc so it survives a new terminal." >&2
+  echo "" >&2
+  echo "Images are billed to your own OpenAI account, so the key is yours. It lives" >&2
+  echo "in your shell, never in this repo." >&2
+  exit 1; }
 
 mkdir -p illustrations "$OUTDIR"
 
