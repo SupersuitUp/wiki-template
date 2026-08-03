@@ -89,7 +89,21 @@ Describe the line style. Hand-drawn vs vector-clean. Varied weight vs uniform. W
 - **One elegant plate is the EXCEPTION**, used only when the idea genuinely is a
   single image. Reach for it with `--single`, deliberately.
 - **Generous white space.** At least 30% of the canvas untouched paper.
-- **No text in the image.** Page titles and captions live in the surrounding MDX.
+- **The hero CARRIES TEXT and must be legible on its own.** A title bar across the
+  top in the page's own words, plus one short label per panel. Someone who sees
+  only the picture should get the gist without opening the article. Pass the words
+  with `--title` and `--labels`; they are spelled into the prompt verbatim so the
+  model cannot invent them.
+- **That title and those labels are the only text allowed.** No body copy, no
+  sentences, no speech bubbles, no captions under the panels, no watermarks.
+
+> **Reversed 2026-08-03** (Gary: "you should only have to read the hero image to
+> be able to get a sense of the gist"). This template previously forbade all
+> lettering, inherited from a sibling family of wikis whose style pack treats
+> lettering as a rejected pole. Those five wikis keep that rule and are unaffected.
+> Here, a hero is explanation rather than decoration: a reader who has to open the
+> article to learn what the picture is about got nothing from the picture. Wikis
+> whose register genuinely forbids lettering pass `--no-text`.
 
 Add any wiki-specific composition rules here.
 

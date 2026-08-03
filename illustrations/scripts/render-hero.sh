@@ -27,12 +27,18 @@ cd "$REPO_ROOT"
 MODE="multipanel"
 PANELS=""
 DRY_RUN=false
+TITLE=""
+LABELS=""
+NO_TEXT=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --single)  MODE="single"; shift ;;
     --panels)  PANELS="${2:-}"; shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
+    --title)   TITLE="${2:-}"; shift 2 ;;
+    --labels)  LABELS="${2:-}"; shift 2 ;;
+    --no-text) NO_TEXT=true; shift ;;
     --) shift; break ;;
     -*) echo "Unknown flag: $1" >&2; exit 1 ;;
     *) break ;;
@@ -40,12 +46,18 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ $# -lt 2 ]]; then
-  echo "Usage: $0 [--panels N|--single] [--dry-run] <slug> \"<scene>\""
-  echo "  slug:  page slug, no extension (e.g. the-context-floor)"
-  echo "  scene: the argument, written AS BEATS"
+  echo "Usage: $0 --title \"<TITLE>\" [--labels \"A|B|C\"] [--panels N|--single] [--dry-run] <slug> \"<scene>\""
+  echo "  slug:   page slug, no extension (e.g. the-context-floor)"
+  echo "  scene:  the argument, written AS BEATS"
+  echo "  --title: the words printed across the top of the hero. REQUIRED unless --no-text."
+  echo "  --labels: one short label per panel, pipe-separated, e.g. \"BEFORE|THE MOVE|AFTER\""
+  echo "  --no-text: opt out of lettering (for wikis whose register forbids it)"
   echo ""
   echo "  Multipanel at 3 beats is the default. --single is the exception, for when"
   echo "  the idea genuinely is one image."
+  echo ""
+  echo "  A hero must be legible ON ITS OWN. Someone who only looks at the picture"
+  echo "  should get the gist without reading the page."
   exit 1
 fi
 
@@ -119,7 +131,41 @@ else
   LAYOUT="ONE single elegant editorial plate: no panels, no grid, no dividing lines."
 fi
 
-NOTEXT="ABSOLUTELY NO TEXT ANYWHERE: no words, no letters, no numbers, no captions, no speech bubbles, no labels, no UI chrome, no menus, no icons. Every beat must be legible from image alone."
+# --- The lettering law -------------------------------------------------------
+# Reversed 2026-08-03 for this template and hyperagency.wiki (Gary: "you should
+# only have to read the hero image to be able to get a sense of the gist"). The
+# five sibling org wikis keep the no-lettering register; their heroes are made by
+# a different pipeline and are not affected.
+#
+# A hero is a piece of EXPLANATION, not decoration. If a reader has to open the
+# article to find out what the picture is about, the picture did nothing.
+if [[ "$NO_TEXT" == true ]]; then
+  TEXTLAW="ABSOLUTELY NO TEXT ANYWHERE: no words, no letters, no numbers, no captions, no speech bubbles, no labels, no UI chrome. Every beat must be legible from image alone."
+else
+  [[ -n "$TITLE" ]] || {
+    echo "ERROR: --title is required." >&2
+    echo "" >&2
+    echo "  A hero has to be readable on its own. Give it the words that go across" >&2
+    echo "  the top, in a few strong words:" >&2
+    echo "    $0 --title \"CAPEX AS A VERB\" $SLUG \"<beats>\"" >&2
+    echo "" >&2
+    echo "  If this wiki's register genuinely forbids lettering, pass --no-text." >&2
+    exit 1; }
+
+  LABEL_LAW=""
+  if [[ -n "$LABELS" ]]; then
+    n=$(awk -F'|' '{print NF}' <<< "$LABELS")
+    if [[ "$MODE" == "multipanel" && "$n" != "$PANELS" ]]; then
+      echo "ERROR: --labels has $n entries but there are $PANELS panels." >&2
+      echo "  Give one label per panel, pipe-separated." >&2
+      exit 1
+    fi
+    pretty=$(sed 's/|/", "/g' <<< "$LABELS")
+    LABEL_LAW=" Label the panels, in order, with these exact words: \"${pretty}\". Each label sits in a small clean band at the top of its own panel."
+  fi
+
+  TEXTLAW="TEXT, and it must be SPELLED EXACTLY AS WRITTEN HERE, with no invented words and no extra sentences anywhere in the image: a TITLE BAR across the very top of the whole image reading \"${TITLE}\" in bold, chunky, hand-inked capitals.${LABEL_LAW} That title and those labels are the ONLY text permitted. No body copy, no paragraphs, no sentences, no speech bubbles, no captions under the panels, no UI chrome, no menus, no watermarks, no signature. Any lettering must be large, high contrast and effortlessly legible at a glance; a reader who sees only this image should understand the point without reading anything else."
+fi
 
 PROMPT="${REGISTER}
 
@@ -127,7 +173,7 @@ ${LAYOUT}
 
 The scene, beat by beat: ${SCENE}
 
-${NOTEXT}"
+${TEXTLAW}"
 
 # --- References: style-only by default --------------------------------------
 # Every blessed ref is passed on every render. That is what locks the look without
