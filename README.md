@@ -135,29 +135,43 @@ Then edit the new file. The frontmatter and page anatomy are already in place.
 
 Every wiki forked from this template ships with a locked illustration pipeline at `illustrations/`. The shape, per the [agentic-brand-os](https://www.appliedai.wiki/concepts/agentic-brand-os) discipline:
 
-- **`illustrations/SPEC.md`** — the canonical visual identity for this wiki. Visual lineage, recurring character (optional), palette, banned vocabulary, per-render prompt template. One source of truth.
-- **`illustrations/refs/`** — locked reference images (`character-sheet.webp` if your wiki has a recurring character, `style-swatch.webp` for the visual register). Passed as `--input-image` on every render so identity stays coherent across many pages.
-- **`illustrations/scripts/render-page.sh`** — the canonical wrapper. Takes `<filename>` + `<scene>`, applies SPEC prompt template, passes the locked character ref, pre-flight greps for banned vocabulary, and auto-converts PNG → WebP (~90% smaller) into `static/img/illustrations/` for deploy.
+- **`wiki.config.json` -> `hero_register`** — the operative settings. `register` is the one sentence that reaches the model; `mode` picks the engine.
+- **`illustrations/SPEC.md`** — the fuller visual identity for humans and agents. Lineage, composition law, banned vocabulary, opt-in recurring character.
+- **`illustrations/refs/`** — 2 to 4 blessed style images, all passed on every render so the look stays coherent across pages.
+- **`illustrations/scripts/render-hero.sh`** — the one door. Owns the register, the panel law and the no-text law, refuses banned vocabulary, converts to WebP, writes provenance next to the shipped asset, and refuses a render that came back as a plate.
+- **`illustrations/scripts/generate.py`** — the vendored OpenAI adapter. Self-contained: no ABU, no external skills folder, dependencies install themselves via `uv`.
 
-To use it:
+To use it, dry-run first (costs nothing), then render:
 
 ```bash
-./illustrations/scripts/render-page.sh "page-name.png" "<one-sentence scene>"
+./illustrations/scripts/render-hero.sh --dry-run <slug> "<beat one>. <beat two>. <beat three>."
+./illustrations/scripts/render-hero.sh <slug> "<beat one>. <beat two>. <beat three>."
 ```
 
-Embed the WebP path in MDX (always `.webp`, never `.png` in deployed content):
+**A hero is a STRIP OF BEATS, 3 by default, not a single plate.** Write the scene as
+beats; one paragraph renders as one plate whatever the layout instruction says.
+
+The door prints the two lines to paste. Always `.webp` in MDX, never `.png`, and the alt
+text is the verbatim prompt because it is the prompt archive:
 
 ```mdx
-![Literal scene description for accessibility and prompt archive.](/img/illustrations/page-name.webp)
+![The exact scene prompt you passed, verbatim.](/img/illustrations/<slug>.webp)
 ```
 
 **Fork-time setup.** After scaffolding a wiki from this template:
 
-1. Customize `illustrations/SPEC.md` for your wiki's visual identity. Customize the `PREFIX` and `SUFFIX` in `illustrations/scripts/render-page.sh` to match.
-2. Generate `illustrations/refs/character-sheet.webp` (if your wiki has a recurring character) and `illustrations/refs/style-swatch.webp` via the wrapper. These become the canonical references for every future render.
-3. Install `cwebp` once: `brew install webp`. Without it, the wrapper falls back to copying the PNG.
+1. Install `uv` and `cwebp` (`brew install webp`), and set `OPENAI_API_KEY` in your shell. Images are billed to your own OpenAI account.
+2. Write one sentence into `hero_register.register` in `wiki.config.json`, and edit `illustrations/SPEC.md` to match.
+3. Render 2 to 4 style references through the door and keep the ones you like in `illustrations/refs/`. That is enough; recurring characters are opt-in and most wikis should skip them.
 
-The discipline is the whole point: locking the visual identity in this many places means changing it later is deliberate, not accidental. The wrapper is the only sanctioned way to call `chatgpt-images` for wiki illustrations; never call the image generator directly or the register will drift.
+The discipline is the point: the door is the only sanctioned way to render a hero. Call the generator directly and the register drifts, provenance lands in the wrong place, and nothing checks that a strip came back.
+
+Run the free tests after any change to the pipeline:
+
+```bash
+uv run illustrations/scripts/tests/test_check_panels.py
+./illustrations/scripts/tests/test_render_hero.sh
+```
 
 See `illustrations/SPEC.md` and `illustrations/scripts/README.md` for the full discipline.
 
