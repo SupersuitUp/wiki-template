@@ -51,6 +51,73 @@ def margined_strip(path, panels, w=1536, h=1024, gutter=40, margin=60):
     return path
 
 
+def textured_strip(path, panels, w=1536, h=1024, gutter=40, noise=14, arrow=True):
+    """The strip a real model actually returns.
+
+    Two things the synthetic fixtures above do not have, both of which broke the
+    first version of the detector on its very first real render (2026-08-03):
+
+    1. PAPER TEXTURE. A genuine cream gutter measures stddev 9 to 18, not 0. The
+       original flat_max of 6.0 was calibrated on texture-free rectangles and
+       rejected every real gutter.
+    2. GLYPHS IN THE GUTTER. The model likes to put a connecting arrow between
+       beats, so a gutter column is not light over its FULL height.
+
+    Both are why the detector counts LIGHT FRACTION per column instead of demanding
+    uniformity.
+    """
+    import random
+    rnd = random.Random(7)
+    # A slightly darker cream than the flat fixtures use, so the grain below is not
+    # clipped at 255. Clipped grain lands at stddev 6 and only just trips the old
+    # threshold; unclipped it reaches 9 to 12, which is what a real render measures.
+    img = Image.new("RGB", (w, h), (243, 238, 224))
+    d = ImageDraw.Draw(img)
+    pw = (w - gutter * (panels - 1)) // panels
+    for i in range(panels):
+        x0 = i * (pw + gutter)
+        d.rectangle([x0, 0, x0 + pw, h], fill=(70, 65, 60))
+    # Paper grain on EVERY pixel, including the gutters. Applying it to every other
+    # pixel leaves half the column pristine and lands around stddev 5, which is below
+    # the threshold that actually failed. The measured value on a real cream gutter is
+    # 9 to 18, so the fixture has to reach that or it does not reproduce the bug.
+    px = img.load()
+    for y in range(h):
+        for x in range(w):
+            r, g, b = px[x, y]
+            n = rnd.randint(-noise, noise)
+            px[x, y] = (max(0, min(255, r + n)), max(0, min(255, g + n)), max(0, min(255, b + n)))
+    if arrow:
+        # A dark connecting arrow sitting in each gutter, mid-height.
+        for i in range(panels - 1):
+            cx = (i + 1) * pw + i * gutter + gutter // 2
+            d.polygon([(cx - 14, h // 2 - 12), (cx + 14, h // 2), (cx - 14, h // 2 + 12)],
+                      fill=(40, 40, 40))
+    img.save(path)
+    return path
+
+
+class TestRealRenderShapes(unittest.TestCase):
+    """Earned from the first real render. The detector refused a correct 3-beat
+    strip, and looking at the image is what caught it rather than trusting the
+    number."""
+
+    def test_textured_gutters_still_count(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = textured_strip(pathlib.Path(t) / "tex.png", 3, arrow=False)
+            self.assertEqual(cp.count_panels(p), 3)
+
+    def test_an_arrow_in_the_gutter_does_not_hide_it(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = textured_strip(pathlib.Path(t) / "arrow.png", 3, arrow=True)
+            self.assertEqual(cp.count_panels(p), 3)
+
+    def test_textured_plate_is_still_one(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = textured_strip(pathlib.Path(t) / "one.png", 1, arrow=False)
+            self.assertEqual(cp.count_panels(p), 1)
+
+
 class TestCountPanels(unittest.TestCase):
     def test_three_panel_strip_counts_three(self):
         with tempfile.TemporaryDirectory() as t:

@@ -24,34 +24,38 @@ from pathlib import Path
 from PIL import Image
 
 
-def _column_profile(img):
-    """(stddev, mean) per column, computed once from the pixel buffer.
+def _light_fraction(img, light_min):
+    """What fraction of each column is paper-light, in one pass over the buffer.
 
-    Done by hand rather than with one ImageStat call per column: that version made
-    1536 crops for a normal hero and took about a second and a half. This is the
-    same arithmetic in one pass.
+    Fraction, NOT uniformity. The first version of this asked whether a column was
+    flat (low stddev) and bright, which is true of a synthetic rectangle and false of
+    every real render:
+
+    - A genuine cream gutter has PAPER TEXTURE and measures stddev 9 to 18. The
+      original flat_max of 6.0 rejected all of them.
+    - The model likes to draw a connecting ARROW between beats, sitting in the
+      gutter at mid-height, so the column is not light over its full extent.
+
+    Measured on the first real render: gutter columns 0.96 to 0.99 light, panel
+    columns 0.12 to 0.20. That is a wide, stable separation, so the threshold does
+    not need to be delicate.
     """
     w, h = img.size
     px = img.load()
     out = []
     for x in range(w):
-        total = 0
-        total_sq = 0
+        lit = 0
         for y in range(h):
-            v = px[x, y]
-            total += v
-            total_sq += v * v
-        mean = total / h
-        var = max(0.0, total_sq / h - mean * mean)
-        out.append((var ** 0.5, mean))
+            if px[x, y] >= light_min:
+                lit += 1
+        out.append(lit / h)
     return out
 
 
-def count_panels(path, *, min_gutter_px: int = 8, flat_max: float = 6.0,
-                 light_min: float = 200.0) -> int:
+def count_panels(path, *, min_gutter_px: int = 8, light_min: float = 200.0,
+                 min_light_frac: float = 0.90) -> int:
     img = Image.open(path).convert("L")
-    profile = _column_profile(img)
-    flags = [sd <= flat_max and mn >= light_min for sd, mn in profile]
+    flags = [f >= min_light_frac for f in _light_fraction(img, light_min)]
     w = len(flags)
 
     # Walk in from both edges: leading and trailing gutter-ish columns are margins.

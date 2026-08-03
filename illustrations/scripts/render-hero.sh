@@ -191,6 +191,23 @@ uv run illustrations/scripts/generate.py \
 
 [[ -f "illustrations/$SLUG.png" ]] || { echo "ERROR: generator produced no file." >&2; exit 1; }
 
+# --- Enforce the panel law BEFORE anything shippable is written -------------
+# Order matters. This check used to run last, after the WebP and its provenance were
+# already sitting in static/, so a REFUSED render still left a deployable file behind
+# for someone to commit. The gate comes first now: nothing reaches the deploy folder
+# until it has passed. The rejected PNG stays in illustrations/ as the record that the
+# attempt happened.
+if [[ "$MODE" == "multipanel" ]]; then
+  uv run illustrations/scripts/check_panels.py "illustrations/$SLUG.png" --expect "$PANELS" || {
+    echo "" >&2
+    echo "The render did not come back as a ${PANELS}-panel strip." >&2
+    echo "Re-render. Do not edit the image, and do not stack a second pass on it." >&2
+    echo "The usual cause is a scene written as one paragraph instead of as beats." >&2
+    echo "" >&2
+    echo "Nothing was written to $OUTDIR. The attempt is kept at illustrations/$SLUG.png." >&2
+    exit 1; }
+fi
+
 # --- Contract artifact 1: the deploy WebP -----------------------------------
 cwebp -quiet -q 85 "illustrations/$SLUG.png" -o "$OUTDIR/$SLUG.webp"
 
@@ -199,16 +216,6 @@ cwebp -quiet -q 85 "illustrations/$SLUG.png" -o "$OUTDIR/$SLUG.webp"
 # WebP, so an auditor looking at what actually deployed has to find it there too.
 if [[ -f "illustrations/$SLUG.png.recipe.json" ]]; then
   cp "illustrations/$SLUG.png.recipe.json" "$OUTDIR/$SLUG.webp.recipe.json"
-fi
-
-# --- Enforce the panel law --------------------------------------------------
-if [[ "$MODE" == "multipanel" ]]; then
-  uv run illustrations/scripts/check_panels.py "illustrations/$SLUG.png" --expect "$PANELS" || {
-    echo "" >&2
-    echo "The render did not come back as a ${PANELS}-panel strip." >&2
-    echo "Re-render. Do not edit the image, and do not stack a second pass on it." >&2
-    echo "The usual cause is a scene written as one paragraph instead of as beats." >&2
-    exit 1; }
 fi
 
 # --- Contract artifacts 4 and 5, printed to paste ---------------------------
