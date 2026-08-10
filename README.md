@@ -94,6 +94,7 @@ templates/                 Copy-and-rename MDX scaffolds
 src/
   css/custom.css           Brand colors + typography
   components/ShareButton   Reusable copy-link button
+  components/PageDates     Created / Updated dates for the article being read
   components/ChangelogWidget Homepage widget: top-N most-recent doc updates
   components/Changelog     Full month-grouped log for /changelog
   theme/                   Docusaurus swizzles
@@ -181,7 +182,10 @@ Every wiki forked from this template ships with the `wiki-changelog` feature pre
 
 - **`/changelog`** is a full month-grouped log of every doc in the wiki, newest first. Lives at `docs/changelog.mdx` and pulls data from the `creation-date-plugin`.
 - **`<ChangelogWidget limit={8} />`** is embedded near the bottom of the homepage (`docs/start-here/index.mdx`). It surfaces the most recently created or updated docs as a compact list.
+- **Every article shows its own `Created` / `Updated` dates** under the H1, next to the copy-link button (`src/components/PageDates.tsx`, injected by the `DocItem/Content` swizzle). Same event stream as `/changelog`, so a page and the log can never disagree. A page written once shows only `Created`.
 - Dates are derived from git history (first commit per file = creation, last commit = update; renames followed). No frontmatter `creation_date` field required.
+
+Do **not** turn on Docusaurus's own `showLastUpdateTime`. It reads git at build time, and the build host clones shallow — so it reports whenever the clone window happens to start, not when the page was actually touched. That is the entire reason this plugin exists.
 
 **Commit `src/data/changelog-events.json`.** Vercel's build container clones the repo shallow AND strips the git remote, so the build can neither see older history nor fetch it. `git fetch --unshallow` in a build command exits 0 having done nothing; earlier versions of this README told you to do exactly that, and it never worked. History has to ride along in the repo instead.
 
