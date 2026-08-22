@@ -222,7 +222,12 @@ command -v cwebp >/dev/null 2>&1 || {
   echo "in your shell, never in this repo." >&2
   exit 1; }
 
-mkdir -p illustrations "$OUTDIR"
+# Also create the PARENT of the slug, because a slug may contain a slash
+# (concepts/creative-industrialist). Without this the render succeeds, the
+# panel check passes, and only the final cwebp fails with "Cannot open
+# output file" after the image has already been paid for.
+mkdir -p illustrations "$OUTDIR" \
+  "$(dirname "illustrations/$SLUG")" "$(dirname "$OUTDIR/$SLUG")"
 
 echo "==> rendering $OUTDIR/$SLUG.webp  [$MODE, $PANELS beats]"
 
