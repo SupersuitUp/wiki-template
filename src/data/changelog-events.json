@@ -1,6 +1,16 @@
 {
   "changeEvents": [
     {
+      "id": "reference/graphic-style@6f7db9b02099963b71efcb64e916d90d89dc22ee",
+      "type": "updated",
+      "date": "2026-08-11T05:55:03-05:00",
+      "docKey": "reference/graphic-style",
+      "routePath": "/reference/graphic-style",
+      "section": "reference",
+      "title": "Graphic Style",
+      "description": "The visual register for every illustration on this wiki, and the one sanctioned command that produces them."
+    },
+    {
       "id": "reference/graphic-style@e04f661dbc5e3550aa78e17398ca1f0d7b16f4eb",
       "type": "new",
       "date": "2026-05-15T22:43:28-05:00",
@@ -8,7 +18,7 @@
       "routePath": "/reference/graphic-style",
       "section": "reference",
       "title": "Graphic Style",
-      "description": "Visual conventions for illustrations and diagrams on this wiki. The default is comic-strip article summaries in the Supersuit Up family style."
+      "description": "The visual register for every illustration on this wiki, and the one sanctioned command that produces them."
     },
     {
       "id": "concepts/sample-concept@4adacf5bb978736e994e7646544b6d67667cdc84",

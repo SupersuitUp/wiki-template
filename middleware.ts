@@ -43,8 +43,13 @@ export const config = {
   // canonical agent SKILL.md and GENERATE.md files under static/skills/<name>/SKILL.md
   // and static/generators/<name>/GENERATE.md, served openly so agents (including
   // blocked-UA crawlers like ClaudeBot) can fetch and run them. The rest stays bot-blocked.
+  // `webmanifest` is listed separately because it is NOT covered by `json`, and
+  // that omission is the trap: every icon a manifest declares can serve a clean
+  // 200 while the manifest itself is gated, so nothing on earth requests them
+  // and the breakage is invisible from an asset check. Found live on a gated
+  // wiki 2026-08-22. Any allowlist keyed on file extension has this hole.
   matcher: [
-    '/((?!assets/|img/|skills/|generators/|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.json|.*\\.(?:js|css|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|map|json|xml)$).*)',
+    '/((?!assets/|img/|skills/|generators/|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.json|.*\\.(?:js|css|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|map|json|webmanifest|xml)$).*)',
   ],
   runtime: 'edge',
 };

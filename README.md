@@ -23,6 +23,14 @@ A GitHub template repo for spinning up a new Docusaurus reference wiki with the 
 - **Search built in.** Custom MiniSearch plugin (Cmd+K / `/` trigger, in-memory index, no third-party service).
 - **Changelog built in.** Git-derived creation/update dates surface as a `<ChangelogWidget />` widget on the homepage and a full `/changelog` page. No frontmatter dates required.
 - **Per-page social share cards built in.** `plugins/og-image-plugin` runs post-build: every page whose head has no `og:image` (no frontmatter `image:` hero) gets a branded 1200x630 card rendered from its own title + description and injected into its head. A shared link to any page unfurls with page-specific art, never a generic site card. Pages with an `image:` hero keep the hero. Brand the cards via the optional `og` block in `wiki.config.json` (`bg`, `accent`, `text`, `muted`).
+- **Favicon and PWA icon set from one script.** `python3 scripts/build-icons.py` draws a monogram from
+  the wiki title in the brand colours and writes every size at once, so a brand change reaches all of
+  them in one run. It also writes a 16x16 proof to `scripts/cache/favicon-16.png`, which is the only
+  size that decides whether a favicon works.
+- **Manifest written at build time.** `plugins/manifest-plugin` emits `manifest.webmanifest` from
+  `wiki.config.json` and declares only icons that exist, so it can never point at a 404. Note the
+  extension: `.webmanifest` is NOT `.json`, and every gate or allowlist keyed on file extension
+  misses it unless it is named. `middleware.ts` names it.
 - **Bot-blocked at the edge.** `middleware.ts` returns 403 for known LLM training and AI-search user agents.
 - **Noindex by default.** `robots.txt: Disallow: /` + `<meta name="robots" content="noindex, nofollow">`. Toggle via `wiki.config.json`.
 - **`llms.txt` + `llms-full.txt` at build time.** Auto-generated from your docs so well-behaved AI agents can read the wiki without crawling it.
@@ -130,6 +138,19 @@ Then edit the new file. The frontmatter and page anatomy are already in place.
 - **Absolute paths for cross-links.** `/concepts/term-name`, not relative paths.
 - **`onBrokenLinks: 'throw'`.** A broken cross-link fails the build.
 - **Article hero = social-share image.** If a page embeds an image (hero comic, strip, illustration), also set `image: "<site-absolute path>"` in its frontmatter (e.g. `image: "/img/illustrations/<slug>.webp"`). Docusaurus renders it as the page's `og:image`/`twitter:image`. Add or update the field in the same edit as the hero embed. Docusaurus validates the file exists at build time, so never point it at a placeholder path.
+- **Every page title stands alone in an unfurl.** A pasted link renders an image, the page title and
+  the domain. It does NOT render `og:description` on iMessage, and Apple's parser DROPS everything
+  after the title delimiter, so `Start Here | Your Wiki` unfurls as the two words **"Start Here"**.
+  Nav labels are the worst offenders here, because they are written to be read next to their siblings
+  in a sidebar and mean nothing alone on a card. So write frontmatter `title` as a sentence that says
+  what the page is with no help from the site name and no repeat of the domain, and add
+  `sidebar_label` to keep the nav short. The markdown `# H1` is untouched by this: Docusaurus prefers
+  the file's own H1 for display, so the visible page does not change. `Admissions` becomes
+  `How students get into this school`; the sidebar still reads `Admissions`.
+- **If the wiki needs a disclaimer, it belongs in the homepage title.** An on-page banner ("these are
+  one person's ideas, not the organization's position") does not render in an unfurl. Anyone
+  forwarding the link shows a title, a domain and a picture. Put the attribution in the title, where
+  it cannot be stripped.
 - **Homepage is the Start Here landing.** The file at `docs/start-here/index.mdx` carries `slug: /` and is both the wiki's homepage AND the Start Here category landing in the sidebar. Do NOT create a separate `docs/index.mdx` for the homepage. A standalone root index lives outside every sidebar group, so the homepage renders without a sidebar. Keep the canonical pattern: one file, two roles.
 
 ## AI-native illustration system (built in)

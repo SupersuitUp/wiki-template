@@ -37,9 +37,26 @@ const config: Config = {
     locales: ['en'],
   },
 
-  headTags: wiki.noindex
-    ? [{ tagName: 'meta', attributes: { name: 'robots', content: 'noindex, nofollow' } }]
-    : [],
+  headTags: [
+    // Docusaurus emits only the single `favicon` link, so everything an iOS home
+    // screen or an install prompt needs is declared here. The manifest is
+    // written at build time by plugins/manifest-plugin, and the edge gate has to
+    // exempt `.webmanifest` separately from `.json`: see middleware.ts.
+    { tagName: 'link', attributes: { rel: 'apple-touch-icon', sizes: '180x180', href: '/img/apple-touch-icon.png' } },
+    { tagName: 'link', attributes: { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/img/icon-192.png' } },
+    { tagName: 'link', attributes: { rel: 'icon', type: 'image/png', sizes: '512x512', href: '/img/icon-512.png' } },
+    { tagName: 'link', attributes: { rel: 'manifest', href: '/manifest.webmanifest' } },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'theme-color',
+        content: (wiki as { og?: { bg?: string } }).og?.bg ?? '#ffffff',
+      },
+    },
+    ...(wiki.noindex
+      ? [{ tagName: 'meta', attributes: { name: 'robots', content: 'noindex, nofollow' } }]
+      : []),
+  ],
 
   plugins: [
     './plugins/search-plugin',
@@ -47,6 +64,7 @@ const config: Config = {
     // Per-page social share cards: every page without a frontmatter `image:`
     // hero gets a branded og:image card generated at build time. Brand tokens
     // come from the optional `og` block in wiki.config.json.
+    './plugins/manifest-plugin',
     ['./plugins/og-image-plugin', (wiki as { og?: Record<string, string> }).og ?? {}],
   ],
 
@@ -89,6 +107,17 @@ const config: Config = {
 
   themeConfig: {
     image: undefined,
+
+    // Docusaurus already emits og:title/description/url/locale/image and the
+    // twitter pair. These are the ones it does NOT, and their absence stays
+    // invisible until a card renders wrong somewhere. Every card this template
+    // generates is 1200x630, so the dimensions are true for all of them.
+    metadata: [
+      { property: 'og:type', content: 'article' },
+      { property: 'og:site_name', content: wiki.title },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
+    ],
     navbar: {
       title: wiki.title,
       logo: undefined,
