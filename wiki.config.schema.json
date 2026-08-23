@@ -18,7 +18,7 @@
     "$schema": { "type": "string" },
     "title": { "type": "string", "description": "Site title and navbar label" },
     "tagline": { "type": "string", "description": "One-line site tagline" },
-    "url": { "type": "string", "description": "Production URL with protocol" },
+    "url": { "type": "string", "description": "Production URL with protocol. MUST be the host that serves 200 DIRECTLY, not one that redirects: Docusaurus turns this into every absolute URL the site emits (og:image, og:url, canonical), and a scraper that does not follow a redirect drops the share card entirely." },
     "organizationName": { "type": "string", "description": "GitHub org/user" },
     "projectName": { "type": "string", "description": "GitHub repo name" },
     "copyright": { "type": "string", "description": "Footer copyright text" },

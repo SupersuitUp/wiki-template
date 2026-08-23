@@ -36,6 +36,31 @@ else
   INTAKE_MODE="source-grounded"
 fi
 
+# The declared URL must serve 200 DIRECTLY, not via a redirect.
+#
+# Docusaurus turns this one value into every absolute URL the site emits:
+# og:image, og:url, the canonical link. If the apex 308s to www (or the
+# reverse), every one of those is a redirect, and scrapers differ on whether
+# they follow one. The ones that do not simply drop the image, so the share
+# card renders blank with nothing in the page source to explain why.
+#
+# Found on four wikis at once (2026-08-23): appliedai, agenticbusiness,
+# supersuit and truthmanagement all declared their apex while their apex
+# redirected to www. Every share card on all four was dropped by any scraper
+# that does not follow redirects, and every build was green the whole time.
+URL_CODE=$(curl -s -m 15 -o /dev/null -w '%{http_code}' "$URL/" 2>/dev/null || echo "000")
+case "$URL_CODE" in
+  30*)
+    REDIRECT_TARGET=$(curl -s -m 15 -o /dev/null -w '%{redirect_url}' "$URL/" 2>/dev/null)
+    echo ""
+    echo "  WARNING: $URL/ returns $URL_CODE and redirects to:"
+    echo "           $REDIRECT_TARGET"
+    echo "  Declare the host that serves 200 DIRECTLY, or every og:image this"
+    echo "  wiki emits will be a redirect and scrapers will drop the card."
+    echo ""
+    ;;
+esac
+
 # Footer copyright defaults to title
 COPYRIGHT="$TITLE"
 
