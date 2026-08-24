@@ -29,6 +29,27 @@ Voice rules keep the wiki coherent across contributors. Replace the defaults bel
 - No motivational poster language. No clichés.
 - Define every coined term in [Concepts](/concepts). Cross-link, do not redefine.
 
+## Admonitions
+
+Docusaurus 3 runs MDX 3, and a directive title goes **in brackets**:
+
+```
+:::note[About the sources]
+Body text.
+:::
+```
+
+**The old space-separated form (`:::note About the sources`) renders as literal
+text on the page**, `:::note` and all. It does not error, and `pnpm build` still
+exits 0, so nothing catches it. The only detector is looking at the page or
+grepping for the pattern:
+
+```bash
+grep -rnE '^:::(note|tip|info|warning|danger|caution)[[:space:]]+[^[[:space:]]' docs/
+```
+
+A bare `:::note` with no title is fine and needs no brackets.
+
 ## Cross-linking
 
 - Use Docusaurus-style absolute paths: `/concepts/term-name`, not relative.
