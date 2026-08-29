@@ -9,7 +9,7 @@
     "init:field-note-sharers": "bash scripts/init-field-note-sharers.sh",
     "init:intake-skill": "bash scripts/init-intake-skill.sh",
     "register-skills": "bash scripts/register-skills.sh",
-    "prebuild": "node scripts/check-admonitions.mjs && node scripts/llms-txt-env.mjs",
+    "prebuild": "node scripts/check-admonitions.mjs && node scripts/llms-txt-env.mjs && node scripts/check-links.mjs",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
