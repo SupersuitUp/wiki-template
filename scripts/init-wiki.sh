@@ -131,3 +131,17 @@ echo "  4. If you enabled field-note-sharers, paste the sidebar snippet printed 
 echo "  5. If you skipped registration above, run 'npm run register-skills' to wire the hosted skills into global discovery."
 echo "  6. Run 'npm install' then 'npm start' to preview."
 echo ""
+
+# --- sample content cleanup ---
+# The template ships docs/concepts/sample-concept.md AND a glossary row linking to
+# it. An author writing real concepts deletes the sample page and never thinks about
+# the glossary, so the row survives pointing at nothing. Two live wikis shipped that
+# exact dead link before check-links existed to catch it.
+#
+# Remove them together, here, so a fresh wiki never carries the pair.
+rm -f docs/concepts/sample-concept.md
+if [ -f docs/reference/glossary.md ]; then
+  sed -i '' '/concepts\/sample-concept/d' docs/reference/glossary.md 2>/dev/null \
+    || sed -i '/concepts\/sample-concept/d' docs/reference/glossary.md
+fi
+echo "Removed the sample concept and its glossary row."
