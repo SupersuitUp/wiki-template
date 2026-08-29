@@ -42,8 +42,28 @@ CARD_DIR = re.compile(r"^(og|share|social)(-.*)?$", re.I)
 
 def format_exempt(rel: str) -> bool:
     parts = rel.split("/")
-    return bool(ICON_NAME.match(parts[-1])) or bool(CARD_STEM.match(parts[-1].rsplit(".", 1)[0])) \
-        or any(CARD_DIR.match(d) for d in parts[:-1])
+    # search, not match: CARD_STEM's second alternative is a SUFFIX (-social-card), and
+    # re.match anchors at the start, so match() silently classified
+    # docusaurus-social-card.jpg as convertible while the JS gate called it exempt. The
+    # self-test below exists because that drift is invisible until it converts something.
+    return bool(ICON_NAME.search(parts[-1])) or bool(CARD_STEM.search(parts[-1].rsplit(".", 1)[0])) \
+        or any(CARD_DIR.search(d) for d in parts[:-1])
+
+
+def self_test():
+    """Both scripts check themselves against scripts/image-exempt-cases.json first."""
+    cases = json.loads((ROOT / "scripts" / "image-exempt-cases.json").read_text())
+    bad = [p for p in cases["exempt"] if not format_exempt(p)]
+    bad += [p for p in cases["convert"] if format_exempt(p)]
+    if bad:
+        print("[optimize-images] SELF-TEST FAILED, classification disagrees with "
+              "scripts/image-exempt-cases.json:", file=sys.stderr)
+        for p in bad:
+            print(f"  {p}", file=sys.stderr)
+        sys.exit(2)
+
+
+self_test()
 
 # Where a reference to a static asset can live.
 TEXT_DIRS = ["docs", "blog", "src", "static/skills"]
