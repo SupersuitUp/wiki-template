@@ -99,8 +99,12 @@ export default function ogImagePlugin(
         if (!fs.existsSync(htmlPath)) continue;
         let html = fs.readFileSync(htmlPath, 'utf8');
         // A page that already carries og:image (frontmatter hero) keeps it.
-        // The html-minifier may strip attribute quotes, so match both forms.
-        if (/property=["']?og:image["']?/.test(html)) continue;
+        // The html-minifier may strip attribute quotes, so match both forms, and
+        // the match must END at og:image: the site's headTags put og:image:width and
+        // og:image:height on every page, and with the closing quote optional the old
+        // pattern matched those, so every page was skipped and the build reported
+        // "generated 0 share cards" on a wiki whose pages had no card at all.
+        if (/property=["']?og:image(?![:\w])/.test(html)) continue;
 
         const rawTitle = html.match(/<title[^>]*>([^<]*)<\/title>/)?.[1] ?? siteTitle;
         const suffix = ` | ${siteTitle}`;
