@@ -154,6 +154,43 @@ Then edit the new file. The frontmatter and page anatomy are already in place.
   it cannot be stripped.
 - **Homepage is the Start Here landing.** The file at `docs/start-here/index.mdx` carries `slug: /` and is both the wiki's homepage AND the Start Here category landing in the sidebar. Do NOT create a separate `docs/index.mdx` for the homepage. A standalone root index lives outside every sidebar group, so the homepage renders without a sidebar. Keep the canonical pattern: one file, two roles.
 
+## Sharing a page: `pnpm share`
+
+**Never send a gated URL.** It arrives on somebody's phone at a moment they did not choose and
+asks them to stop and type. A door is not a degraded page; it is a different and worse thing.
+
+```bash
+pnpm share /concepts/some-page          # prints a link that opens, or refuses
+pnpm share /concepts/some-page --json   # {outcome, url, checked}
+```
+
+Three outcomes, and only two of them produce a link. `open` means the bare URL already works,
+so it is returned unchanged. `unlocked` means a `?key=` link was built AND verified. `blocked`
+exits 1, prints what a human has to supply, and gives you nothing to send.
+
+**It probes the live site rather than trusting configuration.** Whether a gate is on is a fact
+about right now, and a note about it is a memory of a check.
+
+Two things it knows that are easy to get wrong by hand:
+
+- **A cookie-setting 3xx is success.** The gated convention here is `?key=<pw>` sets the cookie
+  and redirects to the clean URL. `fetch` follows redirects with no cookie jar, lands back on
+  the gate, and reads 401. A tool built without this told its author a live password had been
+  rotated. A browser carries the cookie, so that redirect is the open case.
+- **It never appends a parameter to a URL that already opens**, which would put the password
+  into a link that did not need it.
+
+The password comes from `WIKI_PASSWORD` in the environment, else `.env.local` / `.env`, so run
+`vercel env pull` in the repo first. **A variable marked SENSITIVE on the Vercel project cannot
+be read at all**, by the CLI or the API, and the script says so rather than reporting the
+password as broken.
+
+A wiki whose gate uses a different parameter declares it once, in `wiki.config.json`:
+
+```json
+{ "gate": { "unlockParam": "password" } }
+```
+
 ## AI-native illustration system (built in)
 
 Every wiki forked from this template ships with a locked illustration pipeline at `illustrations/`. The shape, per the [agentic-brand-os](https://www.appliedai.wiki/concepts/agentic-brand-os) discipline:
