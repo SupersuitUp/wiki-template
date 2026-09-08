@@ -73,6 +73,16 @@ test("a rotated password is BLOCKED rather than sent hopefully", () => {
   assert.match(r.why, /rotated/);
 });
 
+test("a plain canonicalization redirect is NOT a gate", () => {
+  // The false negative that nearly shipped. Most of these wikis 307/308 from the apex to
+  // `www`, which is canonicalization; a first cut refused every cookie-less redirect and
+  // therefore reported getfreedom.wiki and supersuit.wiki as locked. The real probe follows
+  // redirects carrying cookies, so by the time decide() sees it, that walk has ended in a 200.
+  const r = decide(PAGE, { param: "key", password: "pw" }, { bare: ok, keyed: none });
+  assert.equal(r.outcome, OPEN, "a followed redirect ending in 200 is an open page");
+  assert.equal(r.url, PAGE);
+});
+
 test("opens() is exact about what counts", () => {
   assert.equal(opens({ status: 200 }), true);
   assert.equal(opens({ status: 302, setsCookie: true }), true);

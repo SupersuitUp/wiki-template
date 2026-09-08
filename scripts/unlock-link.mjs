@@ -44,11 +44,17 @@ export function siteUrl(root = ROOT) {
 /**
  * Does a probe result mean the page opened?
  *
- * A 200 obviously does. A 3xx that SETS A COOKIE also does, and this is the half that gets
- * missed: the gated convention here is "?key=<pw> sets the cookie, then redirects to the clean
- * url". `fetch` follows redirects and keeps no cookie jar, so following that redirect lands
- * back on the gate and reports 401 for a password that is perfectly good. A browser carries
- * the cookie, so a cookie-setting redirect is the success case, not a failure.
+ * A 200 obviously does. A 3xx that SETS A COOKIE also does, kept as a safety net for a probe
+ * that could not follow: the gated convention is "?key=<pw> sets the cookie, then redirects to
+ * the clean url", and following that WITHOUT the cookie lands back on the gate and reports 401
+ * for a password that is perfectly good.
+ *
+ * Both halves matter and each one alone is wrong. Plain `fetch(url)` follows redirects with no
+ * cookie jar, so it fails the gated case. Refusing every cookie-less redirect fails the OTHER
+ * case, which is far more common: most of these wikis 307/308 from the apex to `www`, which is
+ * canonicalization and not a gate at all. A first cut of this script called getfreedom.wiki and
+ * supersuit.wiki locked because of it. So `follow()` below carries cookies AND follows, which is
+ * what a browser does, and this predicate then only has to recognise the end of that walk.
  */
 export function opens({ status, setsCookie = false }) {
   if (status === 200) return true;
@@ -121,13 +127,31 @@ if (invokedDirectly) {
   }
   const pageUrl = route.startsWith("http") ? route : `${base}${route.startsWith("/") ? "" : "/"}${route}`;
 
-  // redirect: "manual" on purpose; see opens() above.
-  const probe = async (u) => {
-    try {
-      const r = await fetch(u, { redirect: "manual" });
-      return { status: r.status, setsCookie: r.headers.has("set-cookie") };
-    } catch { return { status: 0, setsCookie: false }; }
+  // Follow redirects the way a browser does: manually, carrying cookies forward. Neither half
+  // is optional; see opens() above for what each one alone gets wrong.
+  const follow = async (start, max = 6) => {
+    let url = start, jar = "", setsCookie = false;
+    for (let i = 0; i <= max; i++) {
+      let r;
+      try {
+        r = await fetch(url, { redirect: "manual", headers: jar ? { cookie: jar } : {} });
+      } catch { return { status: 0, setsCookie }; }
+      const cookies = r.headers.getSetCookie?.() ?? [];
+      if (cookies.length) {
+        setsCookie = true;
+        const pairs = cookies.map((c) => c.split(";")[0]).filter(Boolean);
+        jar = [jar, ...pairs].filter(Boolean).join("; ");
+      }
+      const loc = r.headers.get("location");
+      if (r.status >= 300 && r.status < 400 && loc && i < max) {
+        url = new URL(loc, url).toString();
+        continue;
+      }
+      return { status: r.status, setsCookie };
+    }
+    return { status: 0, setsCookie };
   };
+  const probe = follow;
 
   let password = process.env.WIKI_PASSWORD ?? "";
   if (!password) {
