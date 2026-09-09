@@ -17,6 +17,7 @@ export default function ShareButton(): JSX.Element {
     <button
       onClick={handleClick}
       style={{
+        margin: 0,
         display: 'inline-flex',
         alignItems: 'center',
         gap: '0.5rem',
