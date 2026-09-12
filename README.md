@@ -33,11 +33,29 @@ A GitHub template repo for spinning up a new Docusaurus reference wiki with the 
   extension: `.webmanifest` is NOT `.json`, and every gate or allowlist keyed on file extension
   misses it unless it is named. `middleware.ts` names it.
 - **Bot-blocked at the edge.** `middleware.ts` returns 403 for known LLM training and AI-search user agents.
+- **One-page shares out of a gated wiki.** On a wiki with a password gate, the copy-link button hands out `/s/<sig>/<route>`: one page, served chrome-less and scriptless from the mirror `plugins/share-view-plugin` builds, to a reader who has no password and needs none. Deterministic HMAC over the route (`src/share/`), keyed by `WIKI_SHARE_SECRET` or `WIKI_GATE_SECRET`, minted by the edge at `/s/mint` for an authorized reader; revoke everything at once by rotating the secret. `pnpm share /route` prefers this link on a gated wiki (`--whole-wiki` for the `?key=` link that opens everything). On an open wiki the code is present and dormant.
 - **Noindex by default.** `robots.txt: Disallow: /` + `<meta name="robots" content="noindex, nofollow">`. Toggle via `wiki.config.json`.
 - **`llms.txt` + `llms-full.txt` at build time.** Auto-generated from your docs so well-behaved AI agents can read the wiki without crawling it.
 - **Page templates in `templates/`.** Copy-and-rename scaffolds for `concept.mdx`, `tool.mdx`, `playbook.mdx`, `case-study.mdx`.
 - **Hosted skills.** `static/skills/<name>/SKILL.md` is served openly at `/skills/<name>/SKILL.md` (the `skills/` path is excluded from the bot-block in `middleware.ts`) so agents can fetch and follow canonical skills as a single source of truth. See `static/skills/README.md`.
 - **Hosted generators.** `static/generators/<name>/GENERATE.md` is served openly at `/generators/<name>/GENERATE.md` (the `generators/` path is also excluded from the bot-block) so a playbook links its GENERATE recipe instead of embedding it. See `static/generators/README.md`.
+
+## Versioning
+
+The template has a version, and so does every wiki forked from it. `TEMPLATE-VERSION` at the
+root is the source of truth (`vX.Y.Z`); `package.json` is derived from it by `scripts/bump.sh`.
+`UPGRADE-LEDGER.md` is append-only and carries one entry per version: what changed, a
+**detector** an instance can run to tell whether it already has it, and the **remedy** if not.
+A fleet sweep is those two columns run in order, and an instance's own `TEMPLATE-VERSION` means
+"this repo carries every ledger entry up to here".
+
+```bash
+pnpm template:version        # in the template: the version file, package.json and ledger agree
+                             # in an instance: your version, the template's newest tag, behind or not
+```
+
+Cutting a release: append the ledger entry, `scripts/bump.sh vX.Y.Z`, commit, then
+`git tag -a vX.Y.Z` and push the tag. The bump refuses without the ledger entry.
 
 ## How to use this template
 
