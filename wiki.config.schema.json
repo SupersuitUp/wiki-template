@@ -24,6 +24,17 @@
     "copyright": { "type": "string", "description": "Footer copyright text" },
     "noindex": { "type": "boolean", "description": "If true, robots noindex meta + disable sitemap" },
     "description": { "type": "string", "description": "Site description used in llms.txt header" },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "How this wiki's password gate is unlocked by a link. Read by scripts/unlock-link.mjs (pnpm share). Absent means the family convention.",
+      "properties": {
+        "unlockParam": {
+          "type": ["string", "null"],
+          "description": "The query parameter that carries the password in a prefilled link. `key` is the family convention and the default; reallife and the garysheng.com properties use `password`. null declares that no query-string unlock exists, so the CLI never builds one."
+        }
+      }
+    },
     "hero_register": {
       "type": "object",
       "additionalProperties": false,

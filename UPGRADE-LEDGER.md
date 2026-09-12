@@ -81,3 +81,15 @@ as nothing. The unfurl exemption now skips the block and the gate and NOT the sh
   answers 200. In source: the unfurl early-return sits AFTER the `handleShare` call.
 - **Remedy:** in `middleware.ts`, compute `isUnfurlBot` once, make the bot-block `!isUnfurlBot && BLOCKED`,
   and move `if (isUnfurlBot) return undefined;` to after `handleShare`.
+
+### → v1.1.3 (the schema knows the gate block)
+
+`scripts/unlock-link.mjs` has read `gate.unlockParam` from `wiki.config.json` since v1.0.0, but
+`wiki.config.schema.json` (`additionalProperties: false`) never declared it, so an editor flagged
+the one line a deviating wiki needs and nobody wrote it: reallife's CLI was quietly trying
+`?key=` on a `?password=` gate until 2026-09-12. The schema now carries `gate.unlockParam`.
+
+- **Detector:** `grep -q '"gate"' wiki.config.schema.json`.
+- **Remedy:** copy `wiki.config.schema.json` from the template (it only grew). A wiki whose
+  gate uses a parameter other than `key` sets `"gate": { "unlockParam": "password" }` in its
+  `wiki.config.json`; the others change nothing.
