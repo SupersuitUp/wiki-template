@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   canonicalRoute, parseSharePath, sharePath, shareViewPath, signRoute, verifySharePath,
-} from './signedRoute.ts';
+} from './signedRoute';
 
 const SECRET = 'a-secret-only-the-edge-holds';
 

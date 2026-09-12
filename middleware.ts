@@ -9,7 +9,7 @@
 //      share-view plugin builds, to a reader who has no password and needs none.
 // No auth or password logic here; a gated wiki adds its gate BELOW the share layer.
 
-import { handleShare } from './src/share/handleShare.ts';
+import { handleShare } from './src/share/handleShare';
 
 // Minimal ambient declaration: this repo has no @types/node, but the Vercel
 // edge runtime provides process.env at runtime. Keeps the file type-clean.

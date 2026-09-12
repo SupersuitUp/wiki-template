@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { linkForPage, mintAndCopy } from './mintAndCopy.ts';
+import { linkForPage, mintAndCopy } from './mintAndCopy';
 
 const URL_ = 'https://example.wiki/s/AAAAAAAAAAAAAAAAAAAAAA/concepts/x';
 

@@ -1,7 +1,7 @@
 // The mirror's contract, asserted: static, scriptless, no way out, one line home.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { focusPage, stripCrossLinks, stripNavSections, stripScripts, withShareFooter } from './focus.ts';
+import { focusPage, stripCrossLinks, stripNavSections, stripScripts, withShareFooter } from './focus';
 
 test('every script is gone, inline and external, so nothing hydrates', () => {
   const html = '<head><script>window.x=1</script><link rel="preload" href="/assets/js/a.js" as="script"><link rel="stylesheet" href="/assets/css/a.css"></head><body><p>hi</p><script src="/assets/js/runtime~main.js" defer></script></body>';

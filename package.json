@@ -1,6 +1,6 @@
 {
   "name": "wiki-template",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
@@ -23,7 +23,7 @@
     "check:image-weight": "node scripts/check-image-weight.mjs",
     "share": "node scripts/unlock-link.mjs",
     "test:unlock-link": "node --test scripts/unlock-link.test.mjs",
-    "test:share": "node --test src/share/*.test.ts plugins/share-view-plugin/src/*.test.ts",
+    "test:share": "node --import ./scripts/ts-resolve-hooks.mjs --test src/share/*.test.ts plugins/share-view-plugin/src/*.test.ts",
     "template:version": "node scripts/check-template-version.mjs",
     "test:template-version": "node --test scripts/check-template-version.test.mjs",
     "check:provenance": "node scripts/check-image-provenance.mjs",

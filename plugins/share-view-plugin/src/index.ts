@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { glob } from 'glob';
 import type { LoadContext, Plugin } from '@docusaurus/types';
-import { focusPage } from './focus.ts';
+import { focusPage } from './focus';
 
 // ---------------------------------------------------------------------------
 // Emits a CHROME-LESS mirror of every built page at /share-view/<route>/ for

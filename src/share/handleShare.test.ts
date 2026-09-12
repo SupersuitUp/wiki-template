@@ -1,8 +1,8 @@
 // The middleware layer's decisions, with no network and no host gate.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { handleShare } from './handleShare.ts';
-import { sharePath } from './signedRoute.ts';
+import { handleShare } from './handleShare';
+import { sharePath } from './signedRoute';
 
 const SECRET = 's3';
 const ORIGIN = 'https://example.wiki';

@@ -54,3 +54,18 @@ gains `allowImportingTsExtensions`; `docusaurus.config.ts` registers the plugin.
   one emitted `build/share-view/<route>/index.html` has zero `<script>` tags.
 - **Open wikis** get the code and no behaviour: the address redirects to the page, `/s/mint`
   answers with the page URL. Stamp them v1.1.0 once the detector passes.
+
+### → v1.1.1 (edge-safe imports for the share layer)
+
+v1.1.0 imported `./src/share/handleShare.ts` with the extension, which Node's test runner
+needs and Vercel's edge bundler refuses: the first gated instance to deploy it failed with
+"The Edge Function middleware is referencing unsupported modules". Every import under
+`src/share/`, `plugins/share-view-plugin/` and `middleware.ts` is now extensionless; the tests
+run through `scripts/ts-resolve-hooks.mjs`, a resolver hook that tries the TypeScript
+extensions only under `node --test`. `tsconfig.json` no longer needs `allowImportingTsExtensions`.
+
+- **Detector:** `! grep -rq "from '\./.*\.ts'" src/share plugins/share-view-plugin/src middleware.ts`
+  and `test -f scripts/ts-resolve-hooks.mjs`.
+- **Remedy:** copy `src/share/`, `plugins/share-view-plugin/src/`, `scripts/ts-resolve-hooks.mjs`,
+  `scripts/ts-resolve-loader.mjs`; drop the `.ts` from the import in `middleware.ts`; point
+  `test:share` in package.json at the hook; remove `allowImportingTsExtensions` from tsconfig.

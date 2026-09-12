@@ -21,7 +21,7 @@
 // reachable by an anonymous visitor for the mirror to render; every wiki in this family already
 // excludes /img/ and /assets/ from its matcher.
 
-import { MINT_PATH, canonicalRoute, sharePath, shareViewPath, verifySharePath } from './signedRoute.ts';
+import { MINT_PATH, canonicalRoute, sharePath, shareViewPath, verifySharePath } from './signedRoute';
 
 export interface ShareRequest {
   url: URL;
