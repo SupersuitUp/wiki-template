@@ -35,8 +35,13 @@ const BLOCKED_BOT_PATTERN =
 
 export default async function middleware(request: Request): Promise<Response | undefined> {
   const ua = request.headers.get('user-agent') ?? '';
-  if (UNFURL_BOT_PATTERN.test(ua)) return undefined;
-  if (BLOCKED_BOT_PATTERN.test(ua)) {
+  const isUnfurlBot = UNFURL_BOT_PATTERN.test(ua);
+  // Unfurl bots skip the BLOCK here and skip any GATE below, but they do NOT skip
+  // the share layer: a share address only exists as a rewrite, so a bot waved
+  // straight through to the static site 404s on it and the shared link unfurls
+  // as nothing (supersuit.wiki, 2026-09-12). The layer answers a bot the same
+  // way it answers a recipient, with the mirror and its og tags.
+  if (!isUnfurlBot && BLOCKED_BOT_PATTERN.test(ua)) {
     return new Response(
       'Forbidden: automated training and AI-search crawlers are not permitted on this site.',
       {
@@ -60,6 +65,7 @@ export default async function middleware(request: Request): Promise<Response | u
   });
   if (share) return share;
 
+  if (isUnfurlBot) return undefined;
   // Implicit undefined return lets the request continue to the static site.
 }
 

@@ -69,3 +69,15 @@ extensions only under `node --test`. `tsconfig.json` no longer needs `allowImpor
 - **Remedy:** copy `src/share/`, `plugins/share-view-plugin/src/`, `scripts/ts-resolve-hooks.mjs`,
   `scripts/ts-resolve-loader.mjs`; drop the `.ts` from the import in `middleware.ts`; point
   `test:share` in package.json at the hook; remove `allowImportingTsExtensions` from tsconfig.
+
+### → v1.1.2 (unfurl bots reach the share layer)
+
+The family middleware waved link-preview bots through before anything else ran, which was
+right when the only things below it were a block and a gate. A share address exists only as
+a rewrite, so a bot sent straight to the static site got a 404 and the shared link unfurled
+as nothing. The unfurl exemption now skips the block and the gate and NOT the share layer.
+
+- **Detector:** on a live gated wiki, `curl -s -o /dev/null -w '%{http_code}' -A Twitterbot/1.0 <a share url>`
+  answers 200. In source: the unfurl early-return sits AFTER the `handleShare` call.
+- **Remedy:** in `middleware.ts`, compute `isUnfurlBot` once, make the bot-block `!isUnfurlBot && BLOCKED`,
+  and move `if (isUnfurlBot) return undefined;` to after `handleShare`.
