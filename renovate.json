@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "description": "The framework. A bump PR here is the upgrade; read the package CHANGELOG before merging a major.",
+      "matchPackageNames": ["@supersuit/docusaurus-preset-wiki"],
+      "automerge": false,
+      "labels": ["framework"]
+    }
+  ]
+}
