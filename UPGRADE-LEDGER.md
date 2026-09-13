@@ -93,3 +93,37 @@ the one line a deviating wiki needs and nobody wrote it: reallife's CLI was quie
 - **Remedy:** copy `wiki.config.schema.json` from the template (it only grew). A wiki whose
   gate uses a parameter other than `key` sets `"gate": { "unlockParam": "password" }` in its
   `wiki.config.json`; the others change nothing.
+
+### → v2.0.0 (the framework is a package)
+
+Everything the ledger above told you to copy now arrives by dependency. `@supersuit/docusaurus-preset-wiki`
+carries the five plugins, the theme components and swizzles, the share layer, the framework CSS,
+the edge middleware and the build checks; the template is an ordinary instance of it.
+`TEMPLATE-VERSION`, `scripts/bump.sh` and `scripts/check-template-version.mjs` are retired: the
+package version is the template version and `pnpm outdated` is the checker. **This is the last
+entry.** From here the record is the package's `CHANGELOG.md`, and an upgrade is a version bump.
+
+- **Detector:** `grep -q '"@supersuit/docusaurus-preset-wiki"' package.json && wiki check owned-files`.
+- **Remedy:**
+  1. `pnpm add @supersuit/docusaurus-preset-wiki` and
+     `pnpm remove minisearch satori @resvg/resvg-js gray-matter glob remark strip-markdown` (now the package's).
+  2. `git rm -r plugins src/components src/theme src/share TEMPLATE-VERSION wiki.config.schema.json scripts/bump.sh scripts/check-template-version*.mjs scripts/check-*.mjs scripts/unlock-link*.mjs scripts/generate-llms-txt.sh scripts/llms-txt-env.mjs scripts/test-image-provenance.mjs scripts/ts-resolve-*.mjs scripts/build-icons.py scripts/optimize-images.py`.
+     Keep `scripts/image-exempt-cases.json`, `scripts/image-provenance-baseline.json` and the `init*`/`register-skills` scripts.
+  3. Replace `docusaurus.config.ts` with the template's (three lines; per-wiki navbar/footer additions go in
+     `defineWikiConfig`'s second argument). Replace `package.json` scripts with the template's
+     (`prebuild: wiki check`, `share: wiki share`, `icons`, `optimize:images`). Point `wiki.config.json`'s
+     `$schema` at `./node_modules/@supersuit/docusaurus-preset-wiki/wiki.config.schema.json`.
+  4. `middleware.ts`: an OPEN wiki takes the template's one-line re-export. A GATED wiki moves its gate
+     body into `async function gate(request): Promise<GateVerdict>` and exports `createMiddleware({ gate })`
+     (shape in the template's `middleware.ts` comment). The bot-block, unfurl allowlist and share layer are
+     no longer its code.
+  5. `src/css/custom.css`: keep ONLY the `:root` token block and the dark-mode block (`[data-theme='dark']`
+     and its overrides); delete the layout sections between them, the package ships those.
+  6. In `docs/`, `@site/src/components/ChangelogWidget` → `@theme/ChangelogWidget`, same for `Changelog`,
+     `ShareButton`, `PageDates`.
+  7. Build before and after, and diff `build/` outside `assets/` (a token diff that normalizes the eight-hex
+     asset hashes and the CSS-module class suffixes should be zero; the template's own retarget was).
+     `wiki check`, deploy a preview, run the live checks (search opens, `/changelog` populates, an og card
+     URL is 200, `/manifest.webmanifest` 200, `curl -A GPTBot` 403, `curl -A Twitterbot` 200, `/s/mint?path=/`
+     answers), then production.
+
