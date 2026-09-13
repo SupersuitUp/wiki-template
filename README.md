@@ -20,42 +20,80 @@ A GitHub template repo for spinning up a new Docusaurus reference wiki with the 
 
 - **Page anatomy enforced.** Frontmatter, H1 + italic one-line definition, divider, named H2 sections, Further Reading. The sample docs in `docs/` demonstrate the shape.
 - **Per-wiki branding via `wiki.config.json`.** Title, tagline, URL, GitHub org/repo, noindex toggle. The Docusaurus config and prebuild scripts read from this single source of truth.
-- **Image weight gated.** `scripts/check-image-weight.mjs` runs in `prebuild` and fails the build on any illustration under `static/` that is not webp, is wider than 1536px, or exceeds 1 MB. Icons and share cards are exempt from the format rule on purpose (a favicon must stay `.ico`/`.png`, and several unfurl consumers still do not render webp). Its pair, `npm run optimize:images`, converts in place and rewrites every reference in the same pass, because a rename without the rewrite is a broken image behind a green build. Reason it exists: an image model writes PNG, a gpt-image-2 PNG is 2-4 MB where the same picture as webp is 200-400 KB, and nothing about that looks wrong until a repo carries gigabytes of it. faithwalk.garysheng.com reached 2.1 GB and spent 2m18s of every 4m Vercel build cloning it.
+- **Image weight gated.** `wiki check image-weight` runs in `prebuild` and fails the build on any illustration under `static/` that is not webp, is wider than 1536px, or exceeds 1 MB. Icons and share cards are exempt from the format rule on purpose (a favicon must stay `.ico`/`.png`, and several unfurl consumers still do not render webp). Its pair, `pnpm optimize:images`, converts in place and rewrites every reference in the same pass, because a rename without the rewrite is a broken image behind a green build. Reason it exists: an image model writes PNG, a gpt-image-2 PNG is 2-4 MB where the same picture as webp is 200-400 KB, and nothing about that looks wrong until a repo carries gigabytes of it. faithwalk.garysheng.com reached 2.1 GB and spent 2m18s of every 4m Vercel build cloning it.
 - **Search built in.** Custom MiniSearch plugin (Cmd+K / `/` trigger, in-memory index, no third-party service).
 - **Changelog built in.** Git-derived creation/update dates surface as a `<ChangelogWidget />` widget on the homepage and a full `/changelog` page. No frontmatter dates required.
-- **Per-page social share cards built in.** `plugins/og-image-plugin` runs post-build: every page whose head has no `og:image` (no frontmatter `image:` hero) gets a branded 1200x630 card rendered from its own title + description and injected into its head. A shared link to any page unfurls with page-specific art, never a generic site card. Pages with an `image:` hero keep the hero. Brand the cards via the optional `og` block in `wiki.config.json` (`bg`, `accent`, `text`, `muted`).
-- **Favicon and PWA icon set from one script.** `python3 scripts/build-icons.py` draws a monogram from
+- **Per-page social share cards built in.** The package's og-image plugin runs post-build: every page whose head has no `og:image` (no frontmatter `image:` hero) gets a branded 1200x630 card rendered from its own title + description and injected into its head. A shared link to any page unfurls with page-specific art, never a generic site card. Pages with an `image:` hero keep the hero. Brand the cards via the optional `og` block in `wiki.config.json` (`bg`, `accent`, `text`, `muted`).
+- **Favicon and PWA icon set from one script.** `pnpm icons` (the package's `wiki icons`) draws a monogram from
   the wiki title in the brand colours and writes every size at once, so a brand change reaches all of
   them in one run. It also writes a 16x16 proof to `scripts/cache/favicon-16.png`, which is the only
   size that decides whether a favicon works.
-- **Manifest written at build time.** `plugins/manifest-plugin` emits `manifest.webmanifest` from
+- **Manifest written at build time.** The package's manifest plugin emits `manifest.webmanifest` from
   `wiki.config.json` and declares only icons that exist, so it can never point at a 404. Note the
   extension: `.webmanifest` is NOT `.json`, and every gate or allowlist keyed on file extension
   misses it unless it is named. `middleware.ts` names it.
 - **Bot-blocked at the edge.** `middleware.ts` returns 403 for known LLM training and AI-search user agents.
-- **One-page shares out of a gated wiki.** On a wiki with a password gate, the copy-link button hands out `/s/<sig>/<route>`: one page, served chrome-less and scriptless from the mirror `plugins/share-view-plugin` builds, to a reader who has no password and needs none. Deterministic HMAC over the route (`src/share/`), keyed by `WIKI_SHARE_SECRET` or `WIKI_GATE_SECRET`, minted by the edge at `/s/mint` for an authorized reader; revoke everything at once by rotating the secret. `pnpm share /route` prefers this link on a gated wiki (`--whole-wiki` for the `?key=` link that opens everything). On an open wiki the code is present and dormant.
+- **One-page shares out of a gated wiki.** On a wiki with a password gate, the copy-link button hands out `/s/<sig>/<route>`: one page, served chrome-less and scriptless from the mirror the package's share-view plugin builds, to a reader who has no password and needs none. Deterministic HMAC over the route, keyed by `WIKI_SHARE_SECRET` or `WIKI_GATE_SECRET`, minted by the edge at `/s/mint` for an authorized reader; revoke everything at once by rotating the secret. `pnpm share /route` prefers this link on a gated wiki (`--whole-wiki` for the `?key=` link that opens everything). On an open wiki the code is present and dormant.
 - **Noindex by default.** `robots.txt: Disallow: /` + `<meta name="robots" content="noindex, nofollow">`. Toggle via `wiki.config.json`.
 - **`llms.txt` + `llms-full.txt` at build time.** Auto-generated from your docs so well-behaved AI agents can read the wiki without crawling it.
 - **Page templates in `templates/`.** Copy-and-rename scaffolds for `concept.mdx`, `tool.mdx`, `playbook.mdx`, `case-study.mdx`.
 - **Hosted skills.** `static/skills/<name>/SKILL.md` is served openly at `/skills/<name>/SKILL.md` (the `skills/` path is excluded from the bot-block in `middleware.ts`) so agents can fetch and follow canonical skills as a single source of truth. See `static/skills/README.md`.
 - **Hosted generators.** `static/generators/<name>/GENERATE.md` is served openly at `/generators/<name>/GENERATE.md` (the `generators/` path is also excluded from the bot-block) so a playbook links its GENERATE recipe instead of embedding it. See `static/generators/README.md`.
 
-## Versioning
+## The framework is a package (v2.0.0, 2026-09-13)
 
-The template has a version, and so does every wiki forked from it. `TEMPLATE-VERSION` at the
-root is the source of truth (`vX.Y.Z`); `package.json` is derived from it by `scripts/bump.sh`.
-`UPGRADE-LEDGER.md` is append-only and carries one entry per version: what changed, a
-**detector** an instance can run to tell whether it already has it, and the **remedy** if not.
-A fleet sweep is those two columns run in order, and an instance's own `TEMPLATE-VERSION` means
-"this repo carries every ledger entry up to here".
+Everything above arrives by dependency. `@supersuit/docusaurus-preset-wiki` carries the five
+plugins, every theme component and swizzle, the share layer, the framework CSS, the edge
+middleware and the build checks; this repo is the smallest instance of it. An instance owns
+`wiki.config.json`, `docs/`, `sidebars.ts`, `static/`, the brand tokens in `src/css/custom.css`,
+and three one-line files:
 
-```bash
-pnpm template:version        # in the template: the version file, package.json and ledger agree
-                             # in an instance: your version, the template's newest tag, behind or not
+```ts
+// docusaurus.config.ts
+import wiki from './wiki.config.json';
+import { defineWikiConfig } from '@supersuit/docusaurus-preset-wiki';
+export default defineWikiConfig(wiki);
+
+// middleware.ts (open wiki)
+export { default, config } from '@supersuit/docusaurus-preset-wiki/middleware';
 ```
 
-Cutting a release: append the ledger entry, `scripts/bump.sh vX.Y.Z`, commit, then
-`git tag -a vX.Y.Z` and push the tag. The bump refuses without the ledger entry.
+```json
+// package.json
+"prebuild": "wiki check"
+```
+
+**A framework update is a version bump.** `pnpm up @supersuit/docusaurus-preset-wiki`, build,
+deploy. `pnpm outdated` is the checker. The package's `CHANGELOG.md` is the ledger; the
+`UPGRADE-LEDGER.md` here ends at v2.0.0 and stays as the record of how the fleet got here.
+
+**Per-wiki additions** go in `defineWikiConfig`'s second argument: `themeConfig` deep-merges
+onto the defaults (navbar items, footer links), any other key replaces its default.
+
+```ts
+export default defineWikiConfig(wiki, {
+  themeConfig: { navbar: { items: [{ to: '/listen', label: 'Listen' }] } },
+  plugins: ['./plugins/my-own-plugin'],
+});
+```
+
+**A gated wiki** hands the middleware its verdict and inherits the ordering that has to be right
+(bot-block 403, share layer, then the gate's refusal):
+
+```ts
+import { createMiddleware, type GateVerdict } from '@supersuit/docusaurus-preset-wiki/middleware';
+export { config } from '@supersuit/docusaurus-preset-wiki/middleware';
+async function gate(request: Request): Promise<GateVerdict> {
+  // { authorized: true } for a valid cookie; otherwise { authorized: false, response }
+  // where response is the login page (401) or, for a ?key= prefill, a 303 setting the cookie.
+}
+export default createMiddleware({ gate });
+```
+
+**Overriding one component** is a Docusaurus swizzle: put `src/theme/<Component>/index.tsx` in
+the instance and it wins over the package's. `@theme-original/<Component>` inside it is the
+package's version. Never copy the template's old `plugins/*` or `src/components/*` back in: `wiki check owned-files` fails the
+build if a path the package owns reappears, because that is the fork this package exists to end.
 
 ## How to use this template
 
@@ -119,22 +157,17 @@ docs/                      Wiki content
   reference/               Tools, glossary, voice rules
 templates/                 Copy-and-rename MDX scaffolds
 src/
-  css/custom.css           Brand colors + typography
-  components/ShareButton   Reusable copy-link button
-  components/PageDates     Created / Updated dates for the article being read
-  components/ChangelogWidget Homepage widget: top-N most-recent doc updates
-  components/Changelog     Full month-grouped log for /changelog
-  theme/                   Docusaurus swizzles
-plugins/search-plugin/     Custom MiniSearch
-plugins/creation-date-plugin/  Walks docs/ and extracts git first/last commit dates per file
+  css/custom.css           Brand TOKENS only (:root and dark-mode variables); layout comes from the package
+  data/changelog-events.json  Committed changelog snapshot (see Changelog below)
 scripts/
   init-wiki.sh                    `npm run init` — interactive setup
   init-field-note-sharers.sh      `npm run init:field-note-sharers` — scaffold the attribution section
-  generate-llms-txt.sh            Generates llms.txt at build
-  llms-txt-env.mjs                Bridges wiki.config.json -> env vars
+  image-exempt-cases.json         Per-wiki image-format exemptions read by `wiki check image-weight`
   templates/
     field-note-sharers/           Section-index + source-page templates (mirror of curated-wiki-integrations recipe)
-middleware.ts              Edge bot-block
+middleware.ts              One-line re-export of the package's edge middleware (open wiki)
+node_modules/@supersuit/docusaurus-preset-wiki/   search, changelog, og cards, manifest, share
+                           mirror, theme components, framework CSS, middleware, `wiki` CLI
 static/
   img/                     Favicon, social card
   robots.txt               Disallow all (toggle by removing if noindex=false)
@@ -259,7 +292,7 @@ Every wiki forked from this template ships with the `wiki-changelog` feature pre
 
 - **`/changelog`** is a full month-grouped log of every doc in the wiki, newest first. Lives at `docs/changelog.mdx` and pulls data from the `creation-date-plugin`.
 - **`<ChangelogWidget limit={8} />`** is embedded near the bottom of the homepage (`docs/start-here/index.mdx`). It surfaces the most recently created or updated docs as a compact list.
-- **Every article shows its own `Created` / `Updated` dates** under the H1, next to the copy-link button (`src/components/PageDates.tsx`, injected by the `DocItem/Content` swizzle). Same event stream as `/changelog`, so a page and the log can never disagree. A page written once shows only `Created`.
+- **Every article shows its own `Created` / `Updated` dates** under the H1, next to the copy-link button (the package's `PageDates`, injected by its `DocItem/Content` wrapper). Same event stream as `/changelog`, so a page and the log can never disagree. A page written once shows only `Created`.
 - Dates are derived from git history (first commit per file = creation, last commit = update; renames followed). No frontmatter `creation_date` field required.
 
 Do **not** turn on Docusaurus's own `showLastUpdateTime`. It reads git at build time, and the build host clones shallow — so it reports whenever the clone window happens to start, not when the page was actually touched. That is the entire reason this plugin exists.
@@ -268,7 +301,7 @@ Do **not** turn on Docusaurus's own `showLastUpdateTime`. It reads git at build 
 
 So the plugin keeps a snapshot: on a full clone (your laptop) a build rewrites `src/data/changelog-events.json` from git, and on a shallow clone it leaves that file alone and merges it with whatever recent history it can see. Run a local build and commit the JSON when it changes, or production quietly shows only the last few weeks. Two related traps the plugin handles for you: paths from `git log --name-status` are repo-root-relative (so a site in a subdirectory needs its prefix stripped), and the commit where a shallow clone is cut off looks like a root commit, which would otherwise invent a "New" event for every file that merely existed at that point.
 
-**Fork-time tuning.** Both `src/components/ChangelogWidget.tsx` and `src/components/Changelog.tsx` carry a `SECTION_LABELS` map at the top of the file. The template ships with labels for the default sections (`start-here`, `concepts`, `reference`). If you add or rename top-level folders under `docs/`, update both `SECTION_LABELS` maps to match — otherwise the changelog will fall back to a title-cased version of the folder slug.
+**Section labels** in the changelog are derived from the folder slug (singularized, title-cased); acronyms that should not be title-cased (`faq`, `paos`) live in the package's `ChangelogWidget`. No per-wiki upkeep; a new acronym is a one-line change upstream.
 
 For the recipe in full, see `curated-wiki-integrations/integrations/wiki-changelog/INTEGRATE.md` in the parent `supersuit-repos/` workspace.
 
