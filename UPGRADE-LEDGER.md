@@ -113,10 +113,15 @@ entry.** From here the record is the package's `CHANGELOG.md`, and an upgrade is
      `defineWikiConfig`'s second argument). Replace `package.json` scripts with the template's
      (`prebuild: wiki check`, `share: wiki share`, `icons`, `optimize:images`). Point `wiki.config.json`'s
      `$schema` at `./node_modules/@supersuit/docusaurus-preset-wiki/wiki.config.schema.json`.
-  4. `middleware.ts`: an OPEN wiki takes the template's one-line re-export. A GATED wiki moves its gate
-     body into `async function gate(request): Promise<GateVerdict>` and exports `createMiddleware({ gate })`
-     (shape in the template's `middleware.ts` comment). The bot-block, unfurl allowlist and share layer are
-     no longer its code.
+  4. `middleware.ts`: take the template's file. It re-exports the default and DECLARES `export const config`
+     with the matcher literal itself, because Vercel reads `config` statically and cannot see a re-export
+     (a re-exported config ran the middleware on every path and a gated wiki 401'd its own og cards and
+     manifest, 2026-09-13); `wiki check middleware` refuses a drifted literal. A wiki gated by the family
+     password gate is `createMiddleware({ gate: createPasswordGate() })`, driven by `WIKI_PASSWORD` and
+     `WIKI_GATE_SECRET`; set those with `wiki gate set --password "<word>"`, never by hand. A wiki with its
+     OWN gate (Google identity, a member list) moves its gate body into
+     `async function gate(request): Promise<GateVerdict>` and exports `createMiddleware({ gate })`. The
+     bot-block, unfurl allowlist and share layer are no longer its code.
   5. `src/css/custom.css`: keep ONLY the `:root` token block and the dark-mode block (`[data-theme='dark']`
      and its overrides); delete the layout sections between them, the package ships those.
   6. In `docs/`, `@site/src/components/ChangelogWidget` → `@theme/ChangelogWidget`, same for `Changelog`,
