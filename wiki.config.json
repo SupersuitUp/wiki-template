@@ -16,7 +16,6 @@
     "register": "",
     "spec": "illustrations/SPEC.md",
     "refs": [],
-    "outputDir": "static/img/illustrations",
-    "text": true
+    "outputDir": "static/img/illustrations"
   }
 }

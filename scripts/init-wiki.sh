@@ -66,7 +66,7 @@ COPYRIGHT="$TITLE"
 
 cat > "$CONFIG" << EOF
 {
-  "\$schema": "./wiki.config.schema.json",
+  "\$schema": "./node_modules/@supersuit/docusaurus-preset-wiki/wiki.config.schema.json",
   "title": "$TITLE",
   "tagline": "$TAGLINE",
   "url": "$URL",
