@@ -145,3 +145,18 @@ if [ -f docs/reference/glossary.md ]; then
     || sed -i '/concepts\/sample-concept/d' docs/reference/glossary.md
 fi
 echo "Removed the sample concept and its glossary row."
+
+# --- the worktree marker belongs to THIS repo, never to the one it mints ---
+# `.freedom-worktree.json` says a checkout is SHARED and makes Freedom's gate refuse a commit
+# from its main tree. That is true of wiki-template itself, which several sessions edit at once,
+# and it is false of a wiki created a minute ago that one person has ever touched. The marker
+# rode along in the fork anyway, carrying a `reason` written about Freedom's own wiki checkout,
+# so the skill's next documented step ("commit once right after scaffolding") was refused in a
+# brand-new repo, and the workaround was to prefix every command with FREEDOM_WORKTREE_GATE=off.
+# Reported by @brayantenesaca10-boop (ContinentalWorks/freedom#137).
+#
+# A wiki BECOMES shared later, when a second session starts writing it. Adding the marker then
+# is one file; inheriting it on day one costs every author a refusal they have to learn to
+# bypass, which teaches them to bypass the gate everywhere.
+rm -f .freedom-worktree.json
+echo "Removed the template's worktree marker: this repo is yours, not a shared checkout."
