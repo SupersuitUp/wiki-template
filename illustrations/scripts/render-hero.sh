@@ -264,9 +264,10 @@ cwebp -quiet -q 85 "illustrations/$SLUG.png" -o "$OUTDIR/$SLUG.webp"
 
 # --- Contract artifact 3: provenance beside the SHIPPED asset ---------------
 # The generator writes the recipe next to the PNG it made. The shipped asset is the
-# WebP, so an auditor looking at what actually deployed has to find it there too.
+# WebP, a transform of that PNG, so it gets a derive recipe pointing back at the PNG's
+# own recipe. Copying the PNG recipe here claimed the wrong asset and failed the gate.
 if [[ -f "illustrations/$SLUG.png.recipe.json" ]]; then
-  cp "illustrations/$SLUG.png.recipe.json" "$OUTDIR/$SLUG.webp.recipe.json"
+  python3 illustrations/scripts/write_webp_recipe.py "$SLUG" "$OUTDIR"
 fi
 
 # --- Contract artifacts 4 and 5, printed to paste ---------------------------
