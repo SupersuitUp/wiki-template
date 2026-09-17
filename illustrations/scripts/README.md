@@ -2,6 +2,24 @@
 
 One canonical script: **`render-hero.sh`**. It is the only sanctioned way to render an article hero for this wiki.
 
+## One approved image before any batch
+
+**Render ONE hero, show it to the operator, and get a yes before rendering a second.** A
+batch multiplies whatever is wrong with the style, and the operator is the only one who
+can say whether it reads. Fan out only after one image is approved, and never bless your
+own style references: show them first too.
+
+Earned 2026-09-16 on aphantasia.wiki: eleven heroes rendered in parallel off two refs
+nobody had approved. The refs carried a person and loose thought bubbles, so a woman
+reappeared on pages about men and objects looked like they were thinking. Two full
+re-render rounds later the operator said the thing this rule says: *"you went overboard
+by not checking in with me about getting one good image first."*
+
+**And a symbol in the register gets scattered.** Writing "empty thought bubbles" into
+`hero_register.register` as a motif makes the model sprinkle bubbles beside walls and
+objects. State where a symbol may appear (a thought bubble rises from one person's head)
+rather than listing it as decoration.
+
 ## Quick start
 
 Dry-run first. It assembles and prints the whole prompt, calls nothing, and costs nothing:
