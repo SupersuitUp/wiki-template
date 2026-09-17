@@ -4,7 +4,13 @@
 # dependencies = ["openai>=2.48", "pillow"]
 # ///
 """
-Generate or edit images using OpenAI's gpt-image-2 model.
+Generate or edit images using OpenAI's gpt-image-2.5 models.
+
+MODEL: the default is DEFAULT_MODEL below, gpt-image-2.5-flare, the same model Freedom's
+create-image uses for `--tier fast`. Pass --model gpt-image-2.5-sunburst for a precise edit
+or a premium finish. Every wiki forked from the template carried gpt-image-2 until
+2026-09-16, because a vendored copy does not hear about a model upgrade: change it HERE and
+in every copy at once.
 
 VENDORED. Origin: chatgpt-images/scripts/generate_image.py. This is a deliberate COPY,
 not a symlink and not an import. A wiki has to render on a laptop that has never heard
@@ -126,13 +132,16 @@ def write_recipe(path: Path, args, image_paths: list[str] | None) -> None:
         print(f"Warning: could not write recipe {recipe_path}: {e}", file=sys.stderr)
 
 
+DEFAULT_MODEL = "gpt-image-2.5-flare"
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate or edit images with OpenAI gpt-image-2")
+    parser = argparse.ArgumentParser(description="Generate or edit images with OpenAI gpt-image-2.5")
     parser.add_argument("--prompt", required=True, help="Image description or editing instructions")
     parser.add_argument("--filename", required=True, help="Output file path (PNG)")
-    parser.add_argument("--input-image", action="append", help="Path to input image for editing. Pass multiple --input-image flags for multi-reference editing with gpt-image-2 (e.g. one for face, one for style anchor).")
+    parser.add_argument("--input-image", action="append", help="Path to input image for editing. Pass multiple --input-image flags for multi-reference editing (e.g. one for face, one for style anchor).")
     parser.add_argument("--mask", help="Path to mask PNG for inpainting (DALL-E 2 only)")
-    parser.add_argument("--model", default="gpt-image-2", help="Model: gpt-image-2 (default), gpt-image-1.5, gpt-image-1, gpt-image-1-mini, dall-e-3, dall-e-2")
+    parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Model: {DEFAULT_MODEL} (default), gpt-image-2.5-sunburst (precise edits, premium finish), gpt-image-2, gpt-image-1.5")
     parser.add_argument("--size", default="1536x1024", help="Output size, e.g. 1024x1024, 1536x1024, 1024x1536")
     parser.add_argument("--quality", default="high", help="Quality: high (default), medium, low, auto")
     parser.add_argument("--background", default="auto", choices=["auto", "transparent", "opaque"],
