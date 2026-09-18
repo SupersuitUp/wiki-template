@@ -1,6 +1,13 @@
 # Illustration scripts
 
-One canonical script: **`render-hero.sh`**. It is the only sanctioned way to render an article hero for this wiki.
+**Inside the Supersuit Up org the path is `wiki hero`** (`@supersuit/docusaurus-preset-wiki`
+1.6.0: `wiki hero <slug> --title ... --labels ... --beats ...`, from the wiki root), which paints
+through the shared Style Pack named in `hero.stylePack` of `wiki.config.json` (the packs live in
+`SupersuitUp/wiki-style-packs`), reads the render back against the gate, and publishes it with
+its recipe. **This folder is the fallback**: the vendored pipeline for a wiki with no Agentic
+Brand Universe install, and what `wiki hero` itself falls back to when no ABU adapter is
+found. One canonical script here: **`render-hero.sh`**. It reads the same `hero` block (the
+register comes from the pack's `styleLine`) and still reads the older `hero_register` block.
 
 ## One approved image before any batch
 
