@@ -72,21 +72,61 @@ CONFIG="$REPO_ROOT/wiki.config.json"
 # One python call, shell-quoted output, rather than one call per key. Interpolating
 # a python expression per lookup is how a config read starts silently returning
 # fallbacks when a key name drifts.
-eval "$(python3 - "$CONFIG" <<'PY'
-import json, shlex, sys
+#
+# Two config shapes are read, the new `hero` block first. `hero` (preset 1.6.0, `wiki hero`)
+# names a Style Pack instead of carrying a register sentence, so the register comes from
+# that pack's styleLine, resolved the way `wiki hero` resolves it: a path, or an id under
+# $WIKI_STYLE_PACKS, then ../wiki-style-packs/packs beside the wiki, then the wiki root.
+# `hero` has no mode (this door IS the local engine), `beats` where the old block said
+# `defaultPanels`, and `row`/`grid` where it said `multipanel`. This door draws rows only;
+# a grid is `wiki hero`'s, so a grid config renders here as a row with a warning. The older
+# `hero_register` block still reads exactly as before.
+eval "$(python3 - "$CONFIG" "$REPO_ROOT" <<'PY'
+import json, os, shlex, sys
 try:
     c = json.load(open(sys.argv[1]))
 except Exception as e:
     print(f"echo 'ERROR: cannot parse wiki.config.json: {e}' >&2; exit 1")
     sys.exit(0)
-h = c.get("hero_register") or {}
+root = sys.argv[2]
 def emit(k, v):
     print(f"CFG_{k}={shlex.quote(str(v))}")
-emit("MODE",     h.get("mode", "abu"))
-emit("OUTDIR",   h.get("outputDir", "static/img/illustrations"))
-emit("PANELS",   h.get("defaultPanels", 3))
-emit("LAYOUT",   h.get("layout", "multipanel"))
-emit("REGISTER", h.get("register", "") or "")
+hero = c.get("hero")
+if isinstance(hero, dict):
+    layout = hero.get("layout", "grid")
+    register = ""
+    pack = hero.get("stylePack") or ""
+    if pack:
+        looks_like_path = os.path.isabs(pack) or "/" in pack or pack.startswith(".")
+        candidates = [os.path.join(root, pack)] if looks_like_path else [
+            os.path.join(os.environ["WIKI_STYLE_PACKS"], pack) if os.environ.get("WIKI_STYLE_PACKS") else None,
+            os.path.join(root, "..", "wiki-style-packs", "packs", pack),
+            os.path.join(root, pack),
+        ]
+        for d in [d for d in candidates if d]:
+            f = os.path.join(d, "pack.json")
+            if os.path.isfile(f):
+                try:
+                    register = json.load(open(f)).get("styleLine", "") or ""
+                except Exception:
+                    register = ""
+                break
+        if not register:
+            print(f"echo 'WARN: style pack {pack} not found; rendering with the default register. Set WIKI_STYLE_PACKS or check out wiki-style-packs beside this wiki.' >&2")
+    if layout == "grid":
+        print("echo 'WARN: hero.layout is grid; this door draws one row. For the grid, run wiki hero (preset 1.6.0).' >&2")
+    emit("MODE",     "local")
+    emit("OUTDIR",   hero.get("outputDir", "static/img/illustrations"))
+    emit("PANELS",   hero.get("beats", 4))
+    emit("LAYOUT",   "multipanel")
+    emit("REGISTER", register)
+else:
+    h = c.get("hero_register") or {}
+    emit("MODE",     h.get("mode", "abu"))
+    emit("OUTDIR",   h.get("outputDir", "static/img/illustrations"))
+    emit("PANELS",   h.get("defaultPanels", 3))
+    emit("LAYOUT",   h.get("layout", "multipanel"))
+    emit("REGISTER", h.get("register", "") or "")
 PY
 )"
 

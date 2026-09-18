@@ -9,6 +9,14 @@
   "noindex": true,
   "description": "Canonical reference for the topic this wiki covers.",
   "intake_mode": "source-grounded",
+  "hero": {
+    "stylePack": "warm-editorial-titled",
+    "layout": "grid",
+    "beats": 4,
+    "size": "2560x1440",
+    "tier": "best",
+    "outputDir": "static/img/illustrations"
+  },
   "hero_register": {
     "mode": "local",
     "layout": "multipanel",
