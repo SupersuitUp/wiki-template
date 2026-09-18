@@ -4,10 +4,13 @@
 1.6.0: `wiki hero <slug> --title ... --labels ... --beats ...`, from the wiki root), which paints
 through the shared Style Pack named in `hero.stylePack` of `wiki.config.json` (the packs live in
 `SupersuitUp/wiki-style-packs`), reads the render back against the gate, and publishes it with
-its recipe. **This folder is the fallback**: the vendored pipeline for a wiki with no Agentic
-Brand Universe install, and what `wiki hero` itself falls back to when no ABU adapter is
-found. One canonical script here: **`render-hero.sh`**. It reads the same `hero` block (the
-register comes from the pack's `styleLine`) and still reads the older `hero_register` block.
+its recipe. **This folder is the whole path for a wiki that is not on the package**: the
+vendored pipeline, with one canonical door, **`render-hero.sh`**, which assembles its own prompt
+from the `hero` block (the register comes from the pack's `styleLine`; the older `hero_register`
+block still reads) and renders through `generate.py`. It is not what `wiki hero` runs when it
+finds no Agentic Brand Universe adapter: that fallback is `generate.py` alone, handed the
+prompt the package's compiler built, so `render-hero.sh`'s own prompt assembly never enters a
+`wiki hero` render.
 
 ## One approved image before any batch
 
