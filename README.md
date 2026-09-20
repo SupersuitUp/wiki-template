@@ -54,8 +54,10 @@ import wiki from './wiki.config.json';
 import { defineWikiConfig } from '@supersuit/docusaurus-preset-wiki';
 export default defineWikiConfig(wiki);
 
-// middleware.ts (open wiki)
-export { default, config } from '@supersuit/docusaurus-preset-wiki/middleware';
+// middleware.ts (the gate comes from wiki.config.json; `config` is declared literally, see the file)
+import wiki from './wiki.config.json';
+import { createMiddlewareFromConfig } from '@supersuit/docusaurus-preset-wiki/middleware';
+export default createMiddlewareFromConfig(wiki);
 ```
 
 ```json
@@ -77,17 +79,29 @@ export default defineWikiConfig(wiki, {
 });
 ```
 
-**A gated wiki** hands the middleware its verdict and inherits the ordering that has to be right
-(bot-block 403, share layer, then the gate's refusal):
+**A gated wiki is a `gate` block in `wiki.config.json`**, never an edit to `middleware.ts`:
+
+```json
+"gate": { "type": "password" }            // the default: dark until WIKI_PASSWORD + WIKI_GATE_SECRET are set
+"gate": { "type": "password", "machinePaths": "gated" }   // a private wiki: .md/.txt/llms behind the door too
+"gate": { "type": "freedom-account" }     // for people running Freedom: Google sign-in through the portal
+"gate": { "type": "none" }                // never gated, whatever the project holds
+```
+
+`wiki gate set --password "<word>"` or `wiki gate set --type freedom-account --pass-secret "<the
+portal's>"` sets the deployment, redeploys and checks the live door; `wiki gate status` reads it
+back. The ordering that has to be right (bot-block 403, share layer, then the gate's refusal)
+lives in the package. A wiki with a gate of its own (an identity provider, a member list) hands
+the middleware its verdict instead:
 
 ```ts
 import { createMiddleware, type GateVerdict } from '@supersuit/docusaurus-preset-wiki/middleware';
-export { config } from '@supersuit/docusaurus-preset-wiki/middleware';
 async function gate(request: Request): Promise<GateVerdict> {
   // { authorized: true } for a valid cookie; otherwise { authorized: false, response }
   // where response is the login page (401) or, for a ?key= prefill, a 303 setting the cookie.
 }
 export default createMiddleware({ gate });
+// plus the matcher literal, declared in this file
 ```
 
 **Overriding one component** is a Docusaurus swizzle: put `src/theme/<Component>/index.tsx` in
