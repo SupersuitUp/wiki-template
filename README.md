@@ -210,7 +210,7 @@ Then edit the new file. The frontmatter and page anatomy are already in place.
 - **Further Reading at the bottom.** Internal links first, outside sources second.
 - **Absolute paths for cross-links.** `/concepts/term-name`, not relative paths.
 - **`onBrokenLinks: 'throw'`.** A broken cross-link fails the build.
-- **Every page ships with a graphic, and a page without one is not finished.** Two ways, and they are not equal. A **rendered illustration** (`illustrations/scripts/render-hero.sh`) costs money per image and is the right tool for a hero with people in it. A **code-drawn diagram** (`diagrams/build.mjs`) costs nothing, and it is the default, because most pages argue a STRUCTURE (parts, an order, a loop, a contrast) and a structure should be computed rather than painted. Reach for the diagram first. Draw what the page argues; decoration is not a graphic.
+- **Every page ships with a graphic, and a page without one is not finished** (the pure reference pages, a glossary or a changelog, are the exception: a lookup page has no argument to draw). Two ways, and they are not equal. A **rendered illustration** (`illustrations/scripts/render-hero.sh`) costs money per image and is the right tool for a hero with people in it. A **code-drawn diagram** (`diagrams/build.mjs`) costs nothing, and it is the default, because most pages argue a STRUCTURE (parts, an order, a loop, a contrast) and a structure should be computed rather than painted. Reach for the diagram first. Draw what the page argues; decoration is not a graphic.
 - **Article hero = social-share image.** If a page embeds an image (hero comic, strip, illustration), also set `image: "<site-absolute path>"` in its frontmatter (e.g. `image: "/img/illustrations/<slug>.webp"`). Docusaurus renders it as the page's `og:image`/`twitter:image`. Add or update the field in the same edit as the hero embed. Docusaurus validates the file exists at build time, so never point it at a placeholder path.
 - **Every page title stands alone in an unfurl.** A pasted link renders an image, the page title and
   the domain. It does NOT render `og:description` on iMessage, and Apple's parser DROPS everything
@@ -338,7 +338,9 @@ Three things the kit gets right that a hand-rolled script gets wrong:
   THROWS when it does not fit. Overflow is invisible to every other signal: the build is green,
   the page renders, and the text hangs over the edge for every reader.
 - **SVG ships, PNG does not.** An SVG is a few KB and is exempt from `wiki check image-weight`,
-  which only gates rasters. A PNG in `static/` would fail that gate on format.
+  which only gates rasters. A PNG in `static/` would fail that gate on format. Do NOT set a
+  page's frontmatter `image:` to a diagram SVG: several unfurl consumers do not render SVG, and
+  the og-image plugin already makes a branded card for any page without one.
 
 This is the other half of `wiki check ascii-diagrams`, which refuses a diagram typed out of
 dashes and pipes on the grounds that deterministic graphics belong in code. This is the code.

@@ -6,7 +6,7 @@
 
 ## The rule
 
-**A page without a graphic is not finished.** Two ways to give it one:
+**A page without a graphic is not finished**, with one exception: the pure reference pages (a glossary, a voice-rules page, a changelog) carry none, because a lookup page has no argument to draw. Two ways to give every other page one:
 
 | | What it is | Cost | When |
 |---|---|---|---|
@@ -42,6 +42,8 @@ Reach for the diagram first. Most pages argue a structure, and a structure drawn
 - **`static/img/diagrams/<name>.svg`** is the shipped asset. It is a few KB, stays sharp at any width, and is exempt from `wiki check image-weight`, which only gates rasters. Commit it.
 - **`diagrams/preview/<name>.png`** is a 2x render for looking at. Gitignored, because it is a checking aid rather than an artifact. Needs `rsvg-convert` (`brew install librsvg`); without it the SVGs still render and the previews are skipped with a warning.
 
+**Never set frontmatter `image:` to a diagram SVG.** Several link-preview consumers do not render SVG, and the og-image plugin already generates a branded share card for any page that has no `image:`. That field belongs to a rendered illustration. (A small SVG embedded in markdown may also be inlined as a data URI by the bundler, which is fine and changes nothing about the source.)
+
 ## The refusal, which is the point
 
 Every label drawn inside a box is measured against the space it has, and the build **throws** when it does not fit:
@@ -52,6 +54,8 @@ Every label drawn inside a box is measured against the space it has, and the bui
 ```
 
 Overflow is the one defect nobody ever reports: the build is green, the page renders, and the text simply hangs over the edge for every reader. So the check runs at build time and fails loudly. **Shorten the label, split it across lines, or widen the box. Never delete the check**, and never pass a box its own width as `maxWidth` to get around it.
+
+The estimate knows about monospace: a mono stack is measured at a flat width per glyph, because the proportional estimate treats `i` and `l` as narrow and runs about thirty percent under the truth for a title set in a mono brand font. A line that measured fine ran off a card that way, on a real wiki, and the preview is what caught it.
 
 ## Style
 

@@ -150,9 +150,14 @@ const attrs = (o) => Object.entries(o)
 // Width of a string at font-size 1, estimated per character. Approximate on purpose: it is a
 // guard rail, not a typesetter, and it only has to be right enough to catch a label that
 // visibly overruns its box. Tuned to run slightly WIDE, so it refuses before a reader sees it.
+// A MONOSPACE STACK IS MEASURED AS MONOSPACE. Every glyph in one is the same width, so the
+// per-character estimate below (which assumes a proportional face, where `i` is narrow) runs
+// far UNDER the truth for a title set in a mono brand font, and a line that measured fine ran
+// clean off the card. Caught by looking at a preview, which is why the preview exists.
 const NARROW = new Set("ijltfrI.,;:'!|()[]{}/\\ ".split(""));
 const WIDE = new Set("mwMW@%".split(""));
-export function measure(str, { size = 20, weight = 500 } = {}) {
+export function measure(str, { size = 20, weight = 500, family = "" } = {}) {
+  if (/mono|courier|consolas|menlo/i.test(family)) return String(str).length * size * 0.605;
   let u = 0;
   for (const ch of String(str)) {
     if (ch === " ") u += 0.3;
@@ -169,10 +174,10 @@ export function measure(str, { size = 20, weight = 500 } = {}) {
  * Refuse at build time when a label does not fit the space it was given.
  * This is the whole reason the kit is trustworthy: a diagram either fits or it fails loudly.
  */
-export function fit(lines, { size, weight = 500, maxWidth, where = "a label" }) {
+export function fit(lines, { size, weight = 500, family = "", maxWidth, where = "a label" }) {
   if (!maxWidth) return;
   for (const line of Array.isArray(lines) ? lines : [lines]) {
-    const w = measure(line, { size, weight });
+    const w = measure(line, { size, weight, family });
     if (w > maxWidth) {
       throw new Error(
         `[diagrams] "${line}" does not fit ${where}: needs about ${Math.ceil(w)}px at ${size}px, has ${Math.floor(maxWidth)}px.\n` +
@@ -190,7 +195,7 @@ export function text(x, y, lines, opts = {}) {
   } = opts;
   const ls = (Array.isArray(lines) ? lines : [lines]).filter((l) => l !== undefined && l !== null && l !== "");
   if (!ls.length) return "";
-  fit(ls, { size, weight, maxWidth, where: where || `its ${Math.floor(maxWidth || 0)}px slot` });
+  fit(ls, { size, weight, family, maxWidth, where: where || `its ${Math.floor(maxWidth || 0)}px slot` });
   const spans = ls.map((l, i) => `<tspan x="${x}" dy="${i === 0 ? 0 : (size * lead).toFixed(1)}">${esc(l)}</tspan>`).join("");
   return `<text ${attrs({
     x, y, fontFamily: family, fontSize: size, fontWeight: weight, fill,
@@ -332,7 +337,7 @@ export function sampleFlow() {
   b += text(W / 2, loopY - 14, "and what it reads decides what is worth capturing next", { size: 17, fill: C.second });
   const y = loopY + 66;
   b += rule(pad, y, W - pad);
-  b += text(W / 2, y + 44, "Every diagram on this wiki is drawn by code in diagrams/build.mjs.", {
+  b += text(W / 2, y + 44, "Every diagram here is drawn in diagrams/build.mjs.", {
     size: 20, family: T.title, italic: true, weight: 600, maxWidth: W - pad * 2, where: "the closing line",
   });
   return frame(W, y + 84, "How to read a diagram here", "Three boxes, one argument, no image model", b);
