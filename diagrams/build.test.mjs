@@ -27,6 +27,17 @@ test("fit refuses a label wider than its slot, and names it", () => {
   assert.doesNotThrow(() => fit("short", { size: 24, maxWidth: 400 }));
 });
 
+test("a monospace stack is measured as monospace", () => {
+  // The bug this pins: the proportional estimate treats `i` and `l` as narrow, which is true
+  // of a sans face and false of a mono one, so a title in a mono brand font measured ~30%
+  // under and ran off the card while the build stayed green.
+  const mono = "'Geist Mono', ui-monospace, monospace";
+  const line = "illuminating, in a title, in a mono face";
+  assert.ok(measure(line, { size: 20, family: mono }) > measure(line, { size: 20 }));
+  assert.equal(Math.round(measure("abcd", { size: 10, family: mono })), 24);
+  assert.throws(() => text(0, 0, line, { size: 20, family: mono, maxWidth: 420 }), /does not fit/);
+});
+
 test("fit is not vacuous: it fails when the guard is removed", () => {
   // Mutation check. If `text` ever stops calling `fit`, this test is the thing that notices.
   assert.throws(() => text(0, 0, "an unmistakably over-long single line of label text", { size: 30, maxWidth: 80 }), /does not fit/);

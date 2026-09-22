@@ -19,10 +19,10 @@ Every claim traces to a source. Name the source in the sentence, blockquote quot
 
 ## The second law: a page without a graphic is not finished
 
-Every page ships with a graphic, and there are two ways to give it one.
+Every page ships with a graphic, and there are two ways to give it one. The exception is the pure reference pages (a glossary, a voice-rules page, a changelog), which carry none, because a lookup page has no argument to draw.
 
 - **A code-drawn diagram is the default, and it is free.** `diagrams/build.mjs` draws SVG from code in this wiki's own colours: copy a function, register it, run `node diagrams/build.mjs <name>`, LOOK at the 2x preview it writes to `diagrams/preview/<name>.png`, fix any overflow or overlap, then embed `![one sentence saying what the diagram argues](/img/diagrams/<name>.svg)`. Read `diagrams/README.md` first.
-- **A rendered illustration is the paid alternative**, via `illustrations/scripts/render-hero.sh`, for a hero with people in it. Set frontmatter `image:` to the same path.
+- **A rendered illustration is the paid alternative**, via `illustrations/scripts/render-hero.sh`, for a hero with people in it. Set frontmatter `image:` to the same path. Never point `image:` at a diagram SVG: several unfurl consumers do not render SVG, and the build already makes a card for a page without one.
 
 **Draw what the SOURCE argues, never decoration**, and a diagram of a source's model is a claim about that source, so it obeys the citation contract like any other: attribute the structure in the caption or in the sentence next to it. Never type a diagram out of dashes and pipes inside a code fence; `wiki check ascii-diagrams` fails the build on it.
 
