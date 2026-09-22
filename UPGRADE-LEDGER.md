@@ -132,3 +132,27 @@ entry.** From here the record is the package's `CHANGELOG.md`, and an upgrade is
      URL is 200, `/manifest.webmanifest` 200, `curl -A GPTBot` 403, `curl -A Twitterbot` 200, `/s/mint?path=/`
      answers), then production.
 
+
+### → v2.0.1 (the definition line is readable in dark mode again)
+
+The package owns the italic definition line under every H1, and since preset 1.8.0 it has
+styled it with `:is(h1, header, .doc-meta-slot) + p`, because the Created / copy-link meta row
+now sits between the title and the line. Every instance's `custom.css` dark block still said
+`h1 + p`, which matches nothing once the row is there. Nothing errored: the package's rule kept
+applying, so the line rendered the package's light `#555` on a near-black page. **2.5:1, against
+a 4.5:1 floor**, on every wiki in the family for about a month.
+
+Preset **1.11.0** ends the split: every text colour in the package reads a `--wiki-*` token that
+declares its dark value in the same file, so a rule and the dark half of that rule can no longer
+be separated. This template drops its own definition-line override rather than repairing the
+selector, because two places declaring one colour is how this happened.
+
+- **Detector** (reads the rendered page, not the source, so it is blind to how the defect was
+  written): load any doc page, `document.documentElement.setAttribute('data-theme','dark')`, then
+  compute the WCAG contrast of the definition line's computed `color` against its effective
+  background. Below 4.5 is the defect. Source greps miss the instances whose override drifted.
+- **Remedy:** `pnpm update @supersuit/docusaurus-preset-wiki` (every instance's range is a caret,
+  so `package.json` needs no edit), rebuild, deploy. Then delete the
+  `[data-theme='dark'] .markdown h1 + p …` block from the instance's `src/css/custom.css`: it is
+  dead code either way, and leaving it is what makes the next selector change silent again. A
+  wiki that wants its own definition-line colour sets `--wiki-text-lede` in its dark token block.
