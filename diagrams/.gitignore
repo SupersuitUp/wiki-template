@@ -1,0 +1,4 @@
+# The 2x PNGs are a checking aid, not an artifact: they are re-rendered from the SVG in a
+# second by `node diagrams/build.mjs`, and committing them would put a megabyte of raster into
+# every clone for no reader's benefit. The SVGs in static/img/diagrams/ are what ships.
+preview/

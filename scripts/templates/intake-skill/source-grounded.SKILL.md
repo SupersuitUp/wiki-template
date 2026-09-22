@@ -13,9 +13,18 @@ The personalized intake skill for **{{TITLE}}** ({{URL}}). Hosted at `static/ski
 - **Purpose:** {{DESCRIPTION}}
 - **Intake mode:** `source-grounded`. You grow this wiki by folding in external sources with citation, not by adding original opinions.
 
-## The one law: the citation contract
+## The first law: the citation contract
 
 Every claim traces to a source. Name the source in the sentence, blockquote quotes with a tight locator, end every page with a `**Sources:**` line, and keep the root `SOURCES.md` bibliography current. Match the fidelity of the pages already here, and respect this wiki's posture (heavy verbatim quoting is defensible only while the wiki is noindex and bot-blocked).
+
+## The second law: a page without a graphic is not finished
+
+Every page ships with a graphic, and there are two ways to give it one.
+
+- **A code-drawn diagram is the default, and it is free.** `diagrams/build.mjs` draws SVG from code in this wiki's own colours: copy a function, register it, run `node diagrams/build.mjs <name>`, LOOK at the 2x preview it writes to `diagrams/preview/<name>.png`, fix any overflow or overlap, then embed `![one sentence saying what the diagram argues](/img/diagrams/<name>.svg)`. Read `diagrams/README.md` first.
+- **A rendered illustration is the paid alternative**, via `illustrations/scripts/render-hero.sh`, for a hero with people in it. Set frontmatter `image:` to the same path.
+
+**Draw what the SOURCE argues, never decoration**, and a diagram of a source's model is a claim about that source, so it obeys the citation contract like any other: attribute the structure in the caption or in the sentence next to it. Never type a diagram out of dashes and pipes inside a code fence; `wiki check ascii-diagrams` fails the build on it.
 
 ## How to intake
 

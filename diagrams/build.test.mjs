@@ -1,0 +1,104 @@
+// Tests for the diagram kit. `node --test diagrams/` (or `pnpm test:diagrams`).
+//
+// What is worth testing here is not that shapes appear. It is that the kit REFUSES: a label
+// that overruns its box, a card that cannot hold its lines, a diagram that renders NaN into a
+// coordinate. Every one of those ships a broken picture behind a green build, which is the
+// exact failure the build-time refusal exists to prevent, so the refusals get the tests.
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { C, T, DIAGRAMS, card, fit, measure, mix, render, resolveTheme, text, drawIcon } from "./build.mjs";
+
+test("measure grows with both length and size", () => {
+  assert.ok(measure("aaaa", { size: 20 }) > measure("aa", { size: 20 }));
+  assert.ok(measure("hello", { size: 40 }) > measure("hello", { size: 20 }));
+  assert.ok(measure("MMMM", { size: 20 }) > measure("iiii", { size: 20 }));
+});
+
+test("fit refuses a label wider than its slot, and names it", () => {
+  assert.throws(
+    () => fit("a label that is far too long for the space it was given", { size: 24, maxWidth: 120, where: "the test box" }),
+    /does not fit the test box/,
+  );
+  // and passes the same label when the slot is genuinely wide enough
+  assert.doesNotThrow(() => fit("short", { size: 24, maxWidth: 400 }));
+});
+
+test("fit is not vacuous: it fails when the guard is removed", () => {
+  // Mutation check. If `text` ever stops calling `fit`, this test is the thing that notices.
+  assert.throws(() => text(0, 0, "an unmistakably over-long single line of label text", { size: 30, maxWidth: 80 }), /does not fit/);
+});
+
+test("card refuses content taller than the box", () => {
+  assert.throws(
+    () => card(0, 0, 300, 40, "A heading", ["one line", "two lines", "three lines"]),
+    /needs about \d+px of height/,
+  );
+});
+
+test("text escapes markup rather than emitting it raw", () => {
+  const s = text(0, 0, "files & folders <here>");
+  assert.match(s, /files &amp; folders &lt;here&gt;/);
+  assert.doesNotMatch(s, /<here>/);
+});
+
+test("the theme is read from the wiki's own files, not hardcoded", () => {
+  const { C: c, T: t } = resolveTheme();
+  for (const key of ["paper", "ink", "muted", "accent", "second", "edge"]) {
+    assert.match(c[key], /^#[0-9a-fA-F]{6}$/, `${key} is not a hex colour`);
+  }
+  assert.notEqual(c.accent, c.ink, "the accent must be distinguishable from the body ink");
+  assert.ok(t.title.length > 2 && t.body.length > 2, "both font stacks resolve");
+  assert.equal(mix("#000000", "#ffffff", 0.5), "#808080");
+});
+
+test("drawIcon refuses an icon that does not exist", () => {
+  assert.throws(() => drawIcon("no-such-icon", 0, 0), /no icon named/);
+});
+
+test("every registered diagram renders, and renders clean", () => {
+  const out = mkdtempSync(join(tmpdir(), "diagrams-"));
+  try {
+    const names = Object.keys(DIAGRAMS);
+    assert.ok(names.length > 0, "at least one diagram is registered");
+    const files = render(names, { png: false, outDir: out, previewDir: out });
+    assert.equal(files.length, names.length);
+    for (const f of files) {
+      const svg = readFileSync(f, "utf8");
+      assert.match(svg, /^<svg [^>]*width="\d+" height="\d+"/m, `${f} is not a well-formed svg root`);
+      assert.doesNotMatch(svg, /NaN|undefined|null"/, `${f} contains a broken coordinate or attribute`);
+      assert.equal((svg.match(/<svg/g) || []).length, 1, `${f} has more than one svg root`);
+      assert.ok(svg.trimEnd().endsWith("</svg>"), `${f} is truncated`);
+    }
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+});
+
+test("every rendered svg carries a provenance recipe the gate accepts", () => {
+  const out = mkdtempSync(join(tmpdir(), "diagrams-"));
+  try {
+    const [file] = render([Object.keys(DIAGRAMS)[0]], { png: false, outDir: out, previewDir: out });
+    const recipe = JSON.parse(readFileSync(`${file}.recipe.json`, "utf8"));
+    assert.equal(recipe.generator, "diagrams/build.mjs");
+    assert.ok(recipe.params.width > 0 && recipe.params.height > 0);
+    assert.ok(recipe.params.palette.accent, "the recipe records the palette the diagram was drawn in");
+    // Repo-relative, never absolute: a recipe under static/ is served publicly, and an
+    // absolute path would publish a username.
+    assert.doesNotMatch(JSON.stringify(recipe), /\/Users\/|\/home\//);
+    assert.match(recipe.asset, /^static\/img\/diagrams\//);
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+});
+
+test("render refuses a name that is not registered", () => {
+  assert.throws(() => render(["not-a-diagram"], { png: false }), /no diagram named/);
+});
+
+test("the palette and fonts are exported for diagrams to use", () => {
+  assert.ok(C.paper && C.accent && T.title && T.body);
+});

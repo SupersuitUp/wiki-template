@@ -1,0 +1,26 @@
+{
+  "asset": "static/img/diagrams/sample-flow.svg",
+  "generator": "diagrams/build.mjs",
+  "params": {
+    "diagram": "sample-flow",
+    "width": 900,
+    "height": 632,
+    "palette": {
+      "paper": "#fafaf8",
+      "ink": "#1a1a1a",
+      "muted": "#555555",
+      "accent": "#2D4A7C",
+      "second": "#937137",
+      "accentSoft": "#e1e5e9",
+      "accentMid": "#9eabc0",
+      "secondSoft": "#ece7dd",
+      "edge": "#d6d6d4",
+      "hair": "#c0c0be",
+      "white": "#FFFFFF"
+    },
+    "fonts": {
+      "title": "'Geist Mono', ui-monospace, monospace",
+      "body": "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+    }
+  }
+}

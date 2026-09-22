@@ -21,6 +21,7 @@ A GitHub template repo for spinning up a new Docusaurus reference wiki with the 
 - **Page anatomy enforced.** Frontmatter, H1 + italic one-line definition, divider, named H2 sections, Further Reading. The sample docs in `docs/` demonstrate the shape.
 - **Per-wiki branding via `wiki.config.json`.** Title, tagline, URL, GitHub org/repo, noindex toggle. The Docusaurus config and prebuild scripts read from this single source of truth.
 - **Image weight gated.** `wiki check image-weight` runs in `prebuild` and fails the build on any illustration under `static/` that is not webp, is wider than 1536px, or exceeds 1 MB. Icons and share cards are exempt from the format rule on purpose (a favicon must stay `.ico`/`.png`, and several unfurl consumers still do not render webp). Its pair, `pnpm optimize:images`, converts in place and rewrites every reference in the same pass, because a rename without the rewrite is a broken image behind a green build. Reason it exists: an image model writes PNG, a gpt-image-2 PNG is 2-4 MB where the same picture as webp is 200-400 KB, and nothing about that looks wrong until a repo carries gigabytes of it. faithwalk.garysheng.com reached 2.1 GB and spent 2m18s of every 4m Vercel build cloning it.
+- **Graphics on every page, and one of the two ways is free.** A page ships either a rendered illustration (`illustrations/`, an image model, costs money, optional) or a code-drawn diagram (`diagrams/`, one node script, costs nothing, **the default**). The diagram kit draws in the wiki's own colours and fonts, writes SVG into `static/img/diagrams/`, and refuses at build time when a label does not fit its box. See `diagrams/README.md`.
 - **Search built in.** Custom MiniSearch plugin (Cmd+K / `/` trigger, in-memory index, no third-party service).
 - **Changelog built in.** Git-derived creation/update dates surface as a `<ChangelogWidget />` widget on the homepage and a full `/changelog` page. No frontmatter dates required.
 - **Per-page social share cards built in.** The package's og-image plugin runs post-build: every page whose head has no `og:image` (no frontmatter `image:` hero) gets a branded 1200x630 card rendered from its own title + description and injected into its head. A shared link to any page unfurls with page-specific art, never a generic site card. Pages with an `image:` hero keep the hero. Brand the cards via the optional `og` block in `wiki.config.json` (`bg`, `accent`, `text`, `muted`).
@@ -169,6 +170,11 @@ docs/                      Wiki content
   start-here/              Entry point
   concepts/                Flat A-Z lexicon
   reference/               Tools, glossary, voice rules
+diagrams/
+  build.mjs                Code-drawn SVG diagrams: helpers, palette, icons, one worked sample
+  build.test.mjs           Its tests (`node --test diagrams/build.test.mjs`)
+  README.md                How to add one, and the style rules
+  preview/                 Gitignored 2x PNGs, for looking at before embedding
 templates/                 Copy-and-rename MDX scaffolds
 src/
   css/custom.css           Brand TOKENS only (:root and dark-mode variables); layout comes from the package
@@ -184,6 +190,7 @@ node_modules/@supersuit/docusaurus-preset-wiki/   search, changelog, og cards, m
                            mirror, theme components, framework CSS, middleware, `wiki` CLI
 static/
   img/                     Favicon, social card
+  img/diagrams/            Code-drawn SVGs, written by diagrams/build.mjs, committed
   robots.txt               Disallow all (toggle by removing if noindex=false)
 ```
 
@@ -203,6 +210,7 @@ Then edit the new file. The frontmatter and page anatomy are already in place.
 - **Further Reading at the bottom.** Internal links first, outside sources second.
 - **Absolute paths for cross-links.** `/concepts/term-name`, not relative paths.
 - **`onBrokenLinks: 'throw'`.** A broken cross-link fails the build.
+- **Every page ships with a graphic, and a page without one is not finished.** Two ways, and they are not equal. A **rendered illustration** (`illustrations/scripts/render-hero.sh`) costs money per image and is the right tool for a hero with people in it. A **code-drawn diagram** (`diagrams/build.mjs`) costs nothing, and it is the default, because most pages argue a STRUCTURE (parts, an order, a loop, a contrast) and a structure should be computed rather than painted. Reach for the diagram first. Draw what the page argues; decoration is not a graphic.
 - **Article hero = social-share image.** If a page embeds an image (hero comic, strip, illustration), also set `image: "<site-absolute path>"` in its frontmatter (e.g. `image: "/img/illustrations/<slug>.webp"`). Docusaurus renders it as the page's `og:image`/`twitter:image`. Add or update the field in the same edit as the hero embed. Docusaurus validates the file exists at build time, so never point it at a placeholder path.
 - **Every page title stands alone in an unfurl.** A pasted link renders an image, the page title and
   the domain. It does NOT render `og:description` on iMessage, and Apple's parser DROPS everything
@@ -299,6 +307,44 @@ uv run illustrations/scripts/tests/test_check_panels.py
 ```
 
 See `illustrations/SPEC.md` and `illustrations/scripts/README.md` for the full discipline.
+
+## Code-drawn diagrams (built in, and the default graphic)
+
+Every wiki forked from this template ships with `diagrams/`: one node script that draws SVG
+diagrams from code. No image model, no API key, no cost, nothing to install.
+
+```bash
+node diagrams/build.mjs               # render every diagram
+node diagrams/build.mjs my-diagram    # render one
+node --test diagrams/build.test.mjs   # the kit's own tests
+```
+
+It writes `static/img/diagrams/<name>.svg`, which is what a page embeds:
+
+```md
+![One sentence saying what the diagram argues.](/img/diagrams/<name>.svg)
+```
+
+and a 2x `diagrams/preview/<name>.png`, which is gitignored and exists so a human or an agent
+can LOOK at the render before embedding it. Previews need `rsvg-convert`
+(`brew install librsvg`); without it the SVGs still render and the previews are skipped.
+
+Three things the kit gets right that a hand-rolled script gets wrong:
+
+- **It reads the wiki's own colours and fonts** from `src/css/custom.css`, and derives the soft
+  fills, hairlines and second colour from them, so a diagram looks like this wiki rather than
+  like whoever drew it. Override any of it with a `diagrams` block in `wiki.config.json`.
+- **It refuses.** Every label inside a box is measured against the space it has and the build
+  THROWS when it does not fit. Overflow is invisible to every other signal: the build is green,
+  the page renders, and the text hangs over the edge for every reader.
+- **SVG ships, PNG does not.** An SVG is a few KB and is exempt from `wiki check image-weight`,
+  which only gates rasters. A PNG in `static/` would fail that gate on format.
+
+This is the other half of `wiki check ascii-diagrams`, which refuses a diagram typed out of
+dashes and pipes on the grounds that deterministic graphics belong in code. This is the code.
+Refusing something while shipping no alternative is how a rule gets bypassed.
+
+Full discipline, including the style rules and how to add one: `diagrams/README.md`.
 
 ## Changelog (built in)
 

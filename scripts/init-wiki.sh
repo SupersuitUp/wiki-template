@@ -122,6 +122,25 @@ if [[ -z "$REG_INPUT" || "$REG_INPUT" =~ ^[Yy]$ ]]; then
   bash "$ROOT/scripts/register-skills.sh"
 fi
 
+# --- diagrams: carried through to every wiki, with no question asked ---
+# A page without a graphic is not finished, and there are two ways to give it one: a rendered
+# illustration (illustrations/, an image model, costs money, optional) or a code-drawn diagram
+# (diagrams/, a node script, costs nothing, the DEFAULT). The kit is not an integration to
+# opt into, because the one thing it competes with is an author typing a picture out of dashes
+# and pipes, which `wiki check ascii-diagrams` already refuses. Refusing something while
+# shipping no alternative is how a rule gets bypassed.
+echo ""
+echo "=== Diagrams ==="
+if [ ! -f "$ROOT/diagrams/build.mjs" ]; then
+  echo "  ERROR: diagrams/build.mjs is missing from this template." >&2
+  echo "         Every wiki ships with the code-drawn diagram kit. Restore it before continuing." >&2
+  exit 1
+fi
+mkdir -p "$ROOT/static/img/diagrams"
+echo "  Code-drawn diagram kit present at diagrams/ (free, no image model, no API key)."
+echo "  Output goes to static/img/diagrams/<name>.svg; embed as ![alt](/img/diagrams/<name>.svg)."
+echo "  Add one: copy sampleFlow() in diagrams/build.mjs, register it, run 'node diagrams/build.mjs'."
+
 echo ""
 echo "=== Next steps ==="
 echo "  1. Edit src/css/custom.css to set brand colors (the --ifm-color-primary-* group)."
@@ -129,7 +148,9 @@ echo "  2. Replace static/img/favicon.png and static/img/docusaurus-social-card.
 echo "  3. Replace docs/start-here/index.md with the canonical entry point for this wiki."
 echo "  4. If you enabled field-note-sharers, paste the sidebar snippet printed above into sidebars.ts."
 echo "  5. If you skipped registration above, run 'npm run register-skills' to wire the hosted skills into global discovery."
-echo "  6. Run 'npm install' then 'npm start' to preview."
+echo "  6. Every page ships with a graphic: a rendered illustration (paid, optional) or a"
+echo "     code-drawn diagram (free, the default). See diagrams/README.md."
+echo "  7. Run 'npm install' then 'npm start' to preview."
 echo ""
 
 # --- sample content cleanup ---
@@ -140,6 +161,10 @@ echo ""
 #
 # Remove them together, here, so a fresh wiki never carries the pair.
 rm -f docs/concepts/sample-concept.md
+# Same reasoning for the sample DIAGRAM's rendered output: the kit stays, its worked example
+# stays in build.mjs as the thing to copy, and the stray SVG nothing embeds does not ship into
+# a real wiki. `node diagrams/build.mjs` redraws it in a second if you want to look at it.
+rm -f static/img/diagrams/sample-flow.svg static/img/diagrams/sample-flow.svg.recipe.json
 if [ -f docs/reference/glossary.md ]; then
   sed -i '' '/concepts\/sample-concept/d' docs/reference/glossary.md 2>/dev/null \
     || sed -i '/concepts\/sample-concept/d' docs/reference/glossary.md
