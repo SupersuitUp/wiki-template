@@ -20,6 +20,8 @@
     "typecheck": "tsc",
     "share": "wiki share",
     "icons": "wiki icons",
+    "diagrams": "node diagrams/build.mjs",
+    "test:diagrams": "node --test diagrams/build.test.mjs",
     "optimize:images": "wiki optimize-images",
     "check": "wiki check"
   },

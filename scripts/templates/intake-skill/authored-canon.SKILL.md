@@ -13,9 +13,18 @@ The personalized intake skill for **{{TITLE}}** ({{URL}}). Hosted at `static/ski
 - **Purpose:** {{DESCRIPTION}}
 - **Intake mode:** `authored-canon`. You grow this wiki by authoring original, coherent thinking in its voice, not by mapping external sources.
 
-## The one law: coherence with the canon
+## The first law: coherence with the canon
 
 Before authoring, scan the existing pages for prior framings of the idea. Enrich or sharpen what already exists before adding a new page. New thinking must cohere with the canon, not silently contradict it. Match the wiki's voice rules.
+
+## The second law: a page without a graphic is not finished
+
+Every page ships with a graphic, and there are two ways to give it one.
+
+- **A code-drawn diagram is the default, and it is free.** `diagrams/build.mjs` draws SVG from code in this wiki's own colours: copy a function, register it, run `node diagrams/build.mjs <name>`, LOOK at the 2x preview it writes to `diagrams/preview/<name>.png`, fix any overflow or overlap, then embed `![one sentence saying what the diagram argues](/img/diagrams/<name>.svg)`. Read `diagrams/README.md` first.
+- **A rendered illustration is the paid alternative**, via `illustrations/scripts/render-hero.sh`, for a hero with people in it. Set frontmatter `image:` to the same path.
+
+**Draw what the page argues, never decoration.** If you cannot say in one sentence what the reader now knows, the graphic is not earning its space. That sentence is the alt text. Never type a diagram out of dashes and pipes inside a code fence: `wiki check ascii-diagrams` fails the build on it, because that picture breaks on a narrow screen and says nothing to a screen reader.
 
 ## How to intake
 
@@ -23,9 +32,10 @@ Before authoring, scan the existing pages for prior framings of the idea. Enrich
 2. **Author** the page against the wiki's page anatomy (frontmatter, H1, one italic definition line, named H2 sections, Further Reading). Write in the wiki's voice; read its voice-rules page first.
 3. **Cross-link** related concepts. Never re-explain a concept that has a canonical home; link it.
 4. **Voice-check** the draft against the wiki's voice rules.
-5. **Wire the sidebar** for any new page.
-6. **Build** (`pnpm run build`, which enforces `onBrokenLinks: throw`) and fix every broken link.
-7. **Commit and push** (Vercel auto-deploys).
+5. **Draw the page's graphic** and embed it. Look at the preview before embedding; a diagram with a label hanging over a box edge ships behind a green build.
+6. **Wire the sidebar** for any new page.
+7. **Build** (`pnpm run build`, which enforces `onBrokenLinks: throw`) and fix every broken link.
+8. **Commit and push** (Vercel auto-deploys).
 
 ## When NOT to use
 
