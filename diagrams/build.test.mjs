@@ -50,6 +50,54 @@ test("card refuses content taller than the box", () => {
   );
 });
 
+// An icon on a card used to be a second, separate call at a y the author guessed from the
+// card's top, while the heading moved with the centred block. On a short card they crossed.
+// These three pin the fix so it cannot be undone by someone tidying the signature.
+test("a card's icon never overlaps its own heading", () => {
+  // THIS IS THE CARD THAT ACTUALLY BROKE, to the pixel: 232x186, a 20px heading over two
+  // 16px lines, a check icon at 0.8. Drawn the old way (a fixed offset from the card top,
+  // with the card reserving no room for it) the icon's bottom landed 6px INSIDE the
+  // heading. A comfortable card proves nothing here, because the bug only appears when the
+  // block is tall enough relative to the card to rise into the icon.
+  const scale = 0.8, r = 24;
+  const svg = card(0, 0, 232, 186, "Kept healthy", ["outages are fixed", "the feed keeps working"], {
+    headingSize: 20, lineSize: 16, pad: 18, icon: "check", iconScale: scale,
+  });
+  const iconY = Number(/translate\(\s*[\d.]+\s*,\s*([\d.]+)\s*\)/.exec(svg)[1]);
+  const headingY = Number(/<text[^>]*y="([\d.]+)"/.exec(svg)[1]);
+  const iconBottom = iconY + r * scale;
+  const headingTop = headingY - 20; // baseline minus cap height at headingSize 20
+  assert.ok(
+    iconBottom <= headingTop,
+    `icon bottom ${iconBottom} overlaps heading top ${headingTop}`,
+  );
+});
+
+test("the height refusal counts the icon, and names it", () => {
+  // Without the icon these lines fit. With it they do not, and the message has to say which
+  // icon ate the room, or the author shrinks the wrong thing.
+  assert.doesNotThrow(() => card(0, 0, 232, 120, "Heading", ["one line", "two lines"], { headingSize: 20, lineSize: 16 }));
+  assert.throws(
+    () => card(0, 0, 232, 120, "Heading", ["one line", "two lines"], { headingSize: 20, lineSize: 16, icon: "check" }),
+    /the "check" icon is \d+px of that/,
+  );
+});
+
+test("a card with no icon is byte-identical to before the icon option existed", () => {
+  // The fix must not move any existing diagram. Every card in every wiki forked from this
+  // template passes no icon, so this is the regression that would be widest and quietest.
+  const y = 20, h = 196, headingSize = 20, lineSize = 16;
+  const svg = card(10, y, 232, h, "Heading", ["one line"], { headingSize, lineSize, pad: 18 });
+  assert.doesNotMatch(svg, /<g transform="translate/, "a card given no icon must draw none");
+
+  // The ORIGINAL formula, written out, so this asserts the invariant rather than a number
+  // somebody would later "correct" to whatever the code currently emits.
+  const blockH = headingSize * 1.05 + (10 + 1 * lineSize * 1.28);
+  const wasTop = y + (h - blockH) / 2 + headingSize * 0.82;
+  const headingY = Number(/<text[^>]*y="([\d.]+)"/.exec(svg)[1]);
+  assert.equal(Math.round(headingY * 100), Math.round(wasTop * 100));
+});
+
 test("text escapes markup rather than emitting it raw", () => {
   const s = text(0, 0, "files & folders <here>");
   assert.match(s, /files &amp; folders &lt;here&gt;/);

@@ -227,22 +227,51 @@ ${body}
  * A box with a heading and optional lines under it. Every label is measured against the
  * box's own width, so a card that cannot hold its text fails the build.
  */
+/**
+ * THE CARD OWNS ITS ICON. Pass `icon`; never draw one on top of a card afterwards.
+ *
+ * A card centres its text block vertically. For a long time the only way to put an icon on
+ * one was to call drawIcon() separately, at a y the author guessed from the card's TOP, and
+ * nothing connected the two numbers. The heading's position depends on the height of the
+ * block and the height of the card. The icon's depended on neither. On a short card they
+ * crossed and the icon sat on the heading, and it shipped that way in this kit's own sample
+ * diagram, so every author who copied the sample inherited it.
+ *
+ * Both hand-fixes are worse than they look. Growing the card until they separate works and
+ * leaves nothing in the code saying why that number is that number, so the next wording
+ * change quietly re-breaks it. Reaching for `pad` fails differently: pad is both axes, so
+ * squeezing the top squeezes the sides and trips the label-fit refusal on a label that was
+ * never too long.
+ *
+ * So the icon is an argument. Its height joins the block that gets centred, which makes the
+ * overlap unrepresentable rather than merely unlikely, and the refusal below counts it.
+ */
 export function card(x, y, w, h, heading, lines = [], opts = {}) {
   const {
     fill = C.white, stroke = C.accent, strokeWidth = 3, dash = false, radius = 18,
     headingSize = 22, headingFill = C.ink, lineSize = 17, lineFill = C.muted,
     pad = 22, align = "middle", eyebrowText = null, eyebrowFill = C.muted,
+    icon = null, iconScale = 0.82, iconColor = null, iconGap = 14,
   } = opts;
   const inner = w - pad * 2;
   const tx = align === "start" ? x + pad : x + w / 2;
   const ls = Array.isArray(lines) ? lines : [lines];
   const where = `the "${heading}" card`;
-  const blockH = (eyebrowText ? 26 : 0) + headingSize * 1.05 + (ls.length ? 10 + ls.length * lineSize * 1.28 : 0);
+  // Every glyph in the set is drawn from its centre inside r=24 before scaling, so an icon
+  // occupies 48 * scale of height and its centre sits half of that below the top of its slot.
+  const ICON_R = 24;
+  const iconH = icon ? ICON_R * 2 * iconScale + iconGap : 0;
+  const blockH = iconH + (eyebrowText ? 26 : 0) + headingSize * 1.05 + (ls.length ? 10 + ls.length * lineSize * 1.28 : 0);
   if (blockH > h - 16) {
-    throw new Error(`[diagrams] ${where} needs about ${Math.ceil(blockH + 16)}px of height and has ${h}px. Make the card taller or drop a line.`);
+    const why = icon
+      ? ` (the "${icon}" icon is ${Math.ceil(iconH)}px of that: drop it, lower iconScale, or make the card taller)`
+      : ". Make the card taller or drop a line.";
+    throw new Error(`[diagrams] ${where} needs about ${Math.ceil(blockH + 16)}px of height and has ${h}px${why}`);
   }
-  let top = y + (h - blockH) / 2 + headingSize * 0.82;
+  const blockTop = y + (h - blockH) / 2;
+  let top = blockTop + iconH + headingSize * 0.82;
   let s = `<rect ${attrs({ x, y, width: w, height: h, rx: radius, fill, stroke, strokeWidth, strokeDasharray: dash ? "9 7" : null })}/>`;
+  if (icon) s += drawIcon(icon, tx, blockTop + ICON_R * iconScale, { color: iconColor ?? stroke, scale: iconScale });
   if (eyebrowText) {
     s += eyebrow(tx, top - headingSize * 0.75, eyebrowText, { fill: eyebrowFill, anchor: align, maxWidth: inner, where });
     top += 26;
@@ -317,12 +346,14 @@ export function sampleFlow() {
   let b = eyebrow(W / 2, 160, "the sample diagram, drawn in code", { fill: C.muted });
   steps.forEach(([ic, heading, lines], i) => {
     const x = pad + i * (colW + gap);
+    // The icon is passed to the card rather than drawn over it. This is the line most
+    // likely to be copied out of here into a new diagram, so it teaches the safe shape.
     b += card(x, top, colW, cardH, heading, lines, {
       stroke: i === 2 ? C.second : C.accent,
       fill: i === 2 ? C.secondSoft : C.white,
       headingSize: 20, lineSize: 16, pad: 18,
+      icon: ic,
     });
-    b += drawIcon(ic, x + colW / 2, top + 46, { color: i === 2 ? C.second : C.accent, scale: 0.82 });
     if (i < steps.length - 1) {
       b += arrow(x + colW + 12, top + cardH / 2, x + colW + gap - 12, top + cardH / 2, { color: C.accent });
     }
