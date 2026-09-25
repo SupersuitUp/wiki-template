@@ -55,11 +55,21 @@ Every label drawn inside a box is measured against the space it has, and the bui
 
 Overflow is the one defect nobody ever reports: the build is green, the page renders, and the text simply hangs over the edge for every reader. So the check runs at build time and fails loudly. **Shorten the label, split it across lines, or widen the box. Never delete the check**, and never pass a box its own width as `maxWidth` to get around it.
 
+**The second refusal is the phone floor.** A diagram is shown scaled to the reader's column, which on a phone is about 360px, so every size is multiplied by 360 / canvas width before anyone sees it. `frame()` reads the finished SVG and throws when any text would land under 12px there:
+
+```
+[diagrams] "commits by the hour" in "There is no workday" is 17px on a 720px canvas,
+           which a 360px phone column shows at 8.5px. The floor is 12px, so this
+           canvas needs at least 24px.
+```
+
+`minSize(w)` gives the smallest legal size for a canvas (24px at 720). It reads the emitted markup, so a hand-written `<text>` is held to it too. Raise the size, stack instead of squeezing a column in, or say less. Never delete the check; a comment promising "no text under 21px" sat above 17px eyebrows for a whole wiki, and a phone showed them at 8px.
+
 The estimate knows about monospace: a mono stack is measured at a flat width per glyph, because the proportional estimate treats `i` and `l` as narrow and runs about thirty percent under the truth for a title set in a mono brand font. A line that measured fine ran off a card that way, on a real wiki, and the preview is what caught it.
 
 ## Style
 
-- **Portrait or square, 900px wide.** The first reader is on a phone, so type is large and lines are short.
+- **Portrait or square, 720px wide, no text under 24px.** The first reader is on a phone, where 720 shows at half size, so type is large and lines are short. A wider canvas needs proportionally larger type (`minSize(w)`), which is why wider is rarely better.
 - **Colour carries meaning, consistently across a wiki.** Pick a job for `C.accent` and a job for `C.second` and keep them. Say what the jobs are in a comment at the top of `build.mjs`.
 - **No more than about seven boxes.** A diagram that needs more is two diagrams.
 - **The diagram draws its own paper**, so it reads the same in light and dark mode.
