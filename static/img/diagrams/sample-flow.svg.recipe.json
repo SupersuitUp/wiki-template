@@ -3,8 +3,8 @@
   "generator": "diagrams/build.mjs",
   "params": {
     "diagram": "sample-flow",
-    "width": 900,
-    "height": 632,
+    "width": 720,
+    "height": 909,
     "palette": {
       "paper": "#fafaf8",
       "ink": "#1a1a1a",

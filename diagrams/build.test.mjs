@@ -10,7 +10,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { C, T, DIAGRAMS, card, fit, measure, mix, render, resolveTheme, text, drawIcon } from "./build.mjs";
+import { C, T, DIAGRAMS, card, fit, frame, legible, measure, minSize, mix, render, resolveTheme, text, drawIcon, PHONE_COLUMN, PHONE_MIN_PX } from "./build.mjs";
 
 test("measure grows with both length and size", () => {
   assert.ok(measure("aaaa", { size: 20 }) > measure("aa", { size: 20 }));
@@ -160,4 +160,48 @@ test("render refuses a name that is not registered", () => {
 
 test("the palette and fonts are exported for diagrams to use", () => {
   assert.ok(C.paper && C.accent && T.title && T.body);
+});
+
+// ── the phone floor ──────────────────────────────────────────────────────────────────────
+// A diagram is shown scaled to the reader's column, and on a phone that is about 360px. Text
+// that is legible in the source can reach the reader at 8px: it did, across a whole wiki, under
+// a comment claiming nothing was smaller than 21px. These pin the refusal that replaced the
+// comment.
+
+test("minSize is the source size that reaches a 360px column at 12px", () => {
+  assert.equal(PHONE_COLUMN, 360);
+  assert.equal(PHONE_MIN_PX, 12);
+  assert.equal(minSize(720), 24);
+  assert.equal(minSize(900), 30);
+  assert.equal(minSize(360), 12);
+});
+
+test("legible refuses text under the phone floor, and says what it shows at", () => {
+  const svg = `<svg>${text(10, 10, "a seventeen pixel eyebrow", { size: 17 })}</svg>`;
+  assert.throws(() => legible(svg, 720), /"a seventeen pixel eyebrow" in the diagram is 17px on a 720px canvas, which a 360px phone column shows at 8\.5px/);
+  assert.doesNotThrow(() => legible(`<svg>${text(10, 10, "at the floor", { size: 24 })}</svg>`, 720));
+});
+
+test("legible holds hand-written text to the same floor, including text with no size at all", () => {
+  // A <text> written by hand bypasses text(), so the check reads the emitted markup.
+  assert.throws(() => legible('<svg><text x="0" y="0" font-size="20">axis</text></svg>', 720), /"axis"/);
+  // SVG's default is 16px, which is under the floor on any canvas wider than 480.
+  assert.throws(() => legible('<svg><text x="0" y="0">unsized</text></svg>', 720), /"unsized" in the diagram is 16px/);
+});
+
+test("frame refuses a diagram with illegible text: the guard is wired, not just defined", () => {
+  // Mutation check. If frame() ever stops calling legible(), this is the test that notices.
+  assert.throws(() => frame(720, 300, "A title", null, text(360, 200, "tiny", { size: 17 })), /"tiny" in "A title"/);
+  assert.doesNotThrow(() => frame(720, 300, "A title", null, text(360, 200, "fine", { size: 24 })));
+});
+
+test("every registered diagram clears the phone floor", () => {
+  for (const [name, fn] of Object.entries(DIAGRAMS)) {
+    const svg = fn();
+    const width = Number(/width="(\d+)"/.exec(svg)[1]);
+    const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
+    assert.ok(sizes.length > 0, `${name} has no text`);
+    const smallest = Math.min(...sizes);
+    assert.ok(smallest * (PHONE_COLUMN / width) >= PHONE_MIN_PX, `${name}: smallest text is ${smallest}px on ${width}, ${(smallest * PHONE_COLUMN / width).toFixed(1)}px on a phone`);
+  }
 });

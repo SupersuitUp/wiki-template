@@ -187,10 +187,44 @@ export function fit(lines, { size, weight = 500, family = "", maxWidth, where = 
   }
 }
 
+// ── the phone floor ──────────────────────────────────────────────────────────────────────
+// A diagram is drawn on a fixed canvas and shown SCALED to the reader's column. On a phone that
+// column is about 360px, so every size in here is multiplied by 360 / canvas width before a
+// person sees it. On a 720 canvas a 17px eyebrow reaches the reader at 8.5px, and it shipped
+// that way across a whole wiki, under a comment promising that no text was smaller than 21px.
+// The comment was true of the source and false of the screen, which is the only place it
+// matters. So the floor is stated in PHONE pixels, and frame() refuses any text below it.
+export const PHONE_COLUMN = 360, PHONE_MIN_PX = 12;
+/** The smallest font-size a canvas of width `w` may use and still reach a phone at the floor. */
+export const minSize = (w) => Math.ceil((PHONE_MIN_PX * w) / PHONE_COLUMN);
+
+/**
+ * Refuse at build time when any text in a finished SVG would render under the phone floor.
+ * Reads the emitted markup, not the helpers' arguments, so a hand-written <text> is held to the
+ * same floor as one drawn through text(). The fit refusal's twin: that one catches text that
+ * overruns its box, this one catches text nobody on a phone can read.
+ */
+export function legible(svg, width, { column = PHONE_COLUMN, min = PHONE_MIN_PX, where = "the diagram" } = {}) {
+  const scale = column / width;
+  for (const m of svg.matchAll(/<text\b([^>]*)>([\s\S]*?)<\/text>/g)) {
+    const fs = /\bfont-size="([\d.]+)"/.exec(m[1]);
+    const size = fs ? Number(fs[1]) : 16; // SVG's own default, which is smaller still
+    const shown = size * scale;
+    if (shown < min - 1e-9) {
+      const words = m[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      throw new Error(
+        `[diagrams] "${words}" in ${where} is ${size}px on a ${width}px canvas, which a ${column}px phone column shows at ${shown.toFixed(1)}px. ` +
+        `The floor is ${min}px, so this canvas needs at least ${Math.ceil((min * width) / column)}px.\n` +
+        `           Raise the size, or say less. Never delete this check.`,
+      );
+    }
+  }
+}
+
 /** Text, one line or an array of lines. Centred on x unless `anchor` says otherwise. */
 export function text(x, y, lines, opts = {}) {
   const {
-    size = 20, family = T.body, weight = 500, fill = C.ink, anchor = "middle",
+    size = 24, family = T.body, weight = 500, fill = C.ink, anchor = "middle",
     lead = 1.28, italic = false, tracking = 0, maxWidth, where,
   } = opts;
   const ls = (Array.isArray(lines) ? lines : [lines]).filter((l) => l !== undefined && l !== null && l !== "");
@@ -204,23 +238,28 @@ export function text(x, y, lines, opts = {}) {
 }
 
 /** A small tracked-out uppercase label. Use it to say what a group of shapes IS. */
-export const eyebrow = (x, y, s, { fill = C.muted, anchor = "middle", size = 15, maxWidth, where } = {}) =>
-  text(x, y, String(s).toUpperCase(), { size, weight: 700, fill, anchor, tracking: 1.9, maxWidth, where });
+export const eyebrow = (x, y, s, { fill = C.muted, anchor = "middle", size = 24, maxWidth, where } = {}) =>
+  text(x, y, String(s).toUpperCase(), { size, weight: 700, fill, anchor, tracking: 1.2, maxWidth, where });
 
 /** The page a diagram is drawn on: rounded card, title, optional subtitle. */
-export function frame(w, h, title, subtitle, body) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img">
+export function frame(w, h, title, subtitle, body, { titleSize = 38 } = {}) {
+  // Whole pixels. A multi-line closing line makes endAt() fractional, and a fractional root
+  // height is what the kit's own well-formedness test rejects.
+  h = Math.ceil(h);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img">
 <defs>
   <marker id="arrow" viewBox="0 0 10 10" refX="7.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1,1 L9,5 L1,9 Z" fill="${C.accent}"/></marker>
   <marker id="arrow-second" viewBox="0 0 10 10" refX="7.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1,1 L9,5 L1,9 Z" fill="${C.second}"/></marker>
   <marker id="arrow-muted" viewBox="0 0 10 10" refX="7.5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1,1 L9,5 L1,9 Z" fill="${C.muted}"/></marker>
 </defs>
 <rect x="1.5" y="1.5" width="${w - 3}" height="${h - 3}" rx="26" fill="${C.paper}" stroke="${C.edge}" stroke-width="3"/>
-${title ? text(w / 2, 78, title, { size: 38, family: T.title, weight: 700, maxWidth: w - 120, where: "the diagram title" }) : ""}
-${subtitle ? text(w / 2, 116, subtitle, { size: 21, fill: C.muted, maxWidth: w - 140, where: "the diagram subtitle" }) : ""}
+${title ? text(w / 2, 78, title, { size: titleSize, family: T.title, weight: 700, maxWidth: w - 120, where: "the diagram title" }) : ""}
+${subtitle ? text(w / 2, 116, subtitle, { size: minSize(w), fill: C.muted, maxWidth: w - 140, where: "the diagram subtitle" }) : ""}
 ${body}
 </svg>
 `;
+  legible(svg, w, { where: title ? `"${title}"` : "the diagram" });
+  return svg;
 }
 
 /**
@@ -249,19 +288,22 @@ ${body}
 export function card(x, y, w, h, heading, lines = [], opts = {}) {
   const {
     fill = C.white, stroke = C.accent, strokeWidth = 3, dash = false, radius = 18,
-    headingSize = 22, headingFill = C.ink, lineSize = 17, lineFill = C.muted,
+    headingSize = 26, headingFill = C.ink, lineSize = 24, lineFill = C.muted,
     pad = 22, align = "middle", eyebrowText = null, eyebrowFill = C.muted,
     icon = null, iconScale = 0.82, iconColor = null, iconGap = 14,
   } = opts;
   const inner = w - pad * 2;
   const tx = align === "start" ? x + pad : x + w / 2;
   const ls = Array.isArray(lines) ? lines : [lines];
-  const where = `the "${heading}" card`;
+  // A heading may be an array of lines, and the block counts every one of them.
+  const hl = Array.isArray(heading) ? heading.length : 1;
+  const where = `the "${[].concat(heading).join(" ")}" card`;
   // Every glyph in the set is drawn from its centre inside r=24 before scaling, so an icon
   // occupies 48 * scale of height and its centre sits half of that below the top of its slot.
   const ICON_R = 24;
   const iconH = icon ? ICON_R * 2 * iconScale + iconGap : 0;
-  const blockH = iconH + (eyebrowText ? 26 : 0) + headingSize * 1.05 + (ls.length ? 10 + ls.length * lineSize * 1.28 : 0);
+  const headH = headingSize * 1.05 + (hl - 1) * headingSize * 1.28;
+  const blockH = iconH + (eyebrowText ? 26 : 0) + headH + (ls.length ? 10 + ls.length * lineSize * 1.28 : 0);
   if (blockH > h - 16) {
     const why = icon
       ? ` (the "${icon}" icon is ${Math.ceil(iconH)}px of that: drop it, lower iconScale, or make the card taller)`
@@ -278,7 +320,7 @@ export function card(x, y, w, h, heading, lines = [], opts = {}) {
   }
   s += text(tx, top, heading, { size: headingSize, weight: 700, fill: headingFill, anchor: align, maxWidth: inner, where });
   if (ls.length) {
-    s += text(tx, top + 10 + lineSize, ls, { size: lineSize, fill: lineFill, anchor: align, maxWidth: inner, where });
+    s += text(tx, top + (hl - 1) * headingSize * 1.28 + 10 + lineSize, ls, { size: lineSize, fill: lineFill, anchor: align, maxWidth: inner, where });
   }
   return s;
 }
@@ -335,43 +377,41 @@ export function drawIcon(name, x, y, { color = C.accent, scale = 1, width = 3.1 
 // every part of the kit: the frame, an eyebrow, cards whose labels are measured, icons,
 // arrows, a dashed optional path, and a closing line.
 export function sampleFlow() {
-  const W = 900;
-  const pad = 56, colW = 232, gap = (W - pad * 2 - colW * 3) / 2;
-  const top = 200, cardH = 196;
+  // 720 wide and stacked, because the first reader is on a phone: at 720 the smallest legal
+  // size is minSize(720) = 24px, and three 24px cards do not fit side by side.
+  const W = 720, pad = 40, cardW = W - pad * 2, cardH = 150, gap = 50, top = 150;
   const steps = [
-    ["chat", "Something happens", ["a call, a decision,", "a draft, a message"]],
-    ["folder", "It lands in a file", ["plain text you own,", "in version control"]],
-    ["terminal", "A machine reads it", ["before it acts,", "on every later run"]],
+    ["chat", "Something happens", ["a call, a decision, a message"]],
+    ["folder", "It lands in a file", ["plain text you own, versioned"]],
+    ["terminal", "A machine reads it", ["before it acts, on every run"]],
   ];
-  let b = eyebrow(W / 2, 160, "the sample diagram, drawn in code", { fill: C.muted });
+  let b = "";
   steps.forEach(([ic, heading, lines], i) => {
-    const x = pad + i * (colW + gap);
+    const y = top + i * (cardH + gap);
     // The icon is passed to the card rather than drawn over it. This is the line most
     // likely to be copied out of here into a new diagram, so it teaches the safe shape.
-    b += card(x, top, colW, cardH, heading, lines, {
+    b += card(pad, y, cardW - 40, cardH, heading, lines, {
       stroke: i === 2 ? C.second : C.accent,
       fill: i === 2 ? C.secondSoft : C.white,
-      headingSize: 20, lineSize: 16, pad: 18,
-      icon: ic,
+      icon: ic, iconScale: 0.7,
     });
-    if (i < steps.length - 1) {
-      b += arrow(x + colW + 12, top + cardH / 2, x + colW + gap - 12, top + cardH / 2, { color: C.accent });
-    }
+    if (i < steps.length - 1) b += arrow(pad + (cardW - 40) / 2, y + cardH + 8, pad + (cardW - 40) / 2, y + cardH + gap - 10);
   });
   // the return path: what the machine reads shapes what gets captured next
-  const loopY = top + cardH + 86;
+  const last = top + 2 * (cardH + gap), rx = pad + cardW - 40;
   b += `<path ${attrs({
-    d: `M${pad + 2 * (colW + gap) + colW / 2},${top + cardH + 8} V${loopY} H${pad + colW / 2} V${top + cardH + 16}`,
+    d: `M${rx + 4},${last + cardH / 2} H${rx + 26} V${top + cardH / 2} H${rx + 12}`,
     fill: "none", stroke: C.second, strokeWidth: 3.5, strokeLinecap: "round", strokeLinejoin: "round",
     strokeDasharray: "10 8", markerEnd: "url(#arrow-second)",
   })}/>`;
-  b += text(W / 2, loopY - 14, "and what it reads decides what is worth capturing next", { size: 17, fill: C.second });
-  const y = loopY + 66;
+  let y = last + cardH + 50;
+  b += text(W / 2, y, ["and what it reads decides", "what is worth capturing next"], { fill: C.second, maxWidth: cardW, where: "the loop caption" });
+  y += 24 * 1.28 + 44;
   b += rule(pad, y, W - pad);
-  b += text(W / 2, y + 44, "Every diagram here is drawn in diagrams/build.mjs.", {
-    size: 20, family: T.title, italic: true, weight: 600, maxWidth: W - pad * 2, where: "the closing line",
+  b += text(W / 2, y + 44, "Every diagram here is drawn in code.", {
+    size: 26, family: T.title, italic: true, weight: 600, maxWidth: cardW, where: "the closing line",
   });
-  return frame(W, y + 84, "How to read a diagram here", "Three boxes, one argument, no image model", b);
+  return frame(W, y + 84, "How to read a diagram", "Three boxes, one argument", b);
 }
 
 // ── the registry ─────────────────────────────────────────────────────────────────────────
